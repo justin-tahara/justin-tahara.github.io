@@ -105,41 +105,47 @@ window.addEventListener('scroll', () => {
     }
 });
 
-// ===== Cursor Trail Effect (Subtle) =====
-let cursorTrail = [];
-const trailLength = 5;
+// ===== Cursor Trail Effect (Clouds) =====
+let cursorCloudTrail = [];
+const cloudTrailLength = 6;
 
 document.addEventListener('mousemove', (e) => {
     if (window.innerWidth > 968) { // Only on desktop
-        const trail = document.createElement('div');
-        trail.className = 'cursor-trail';
-        trail.style.cssText = `
+        const cloud = document.createElement('div');
+        const size = 22 + Math.random() * 10;
+        const tilt = (Math.random() - 0.5) * 16;
+
+        cloud.className = 'cursor-trail cloud';
+        cloud.textContent = '☁️';
+        cloud.style.cssText = `
             position: fixed;
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            font-size: ${size}px;
             pointer-events: none;
             z-index: 9999;
-            opacity: 0.3;
+            opacity: 0.9;
             left: ${e.clientX}px;
             top: ${e.clientY}px;
-            transform: translate(-50%, -50%);
-            transition: opacity 0.5s ease;
+            transform: translate(-50%, -50%) rotate(${tilt}deg);
+            transition: opacity 0.9s ease, transform 0.9s ease;
+            filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.12));
         `;
 
-        document.body.appendChild(trail);
-        cursorTrail.push(trail);
+        document.body.appendChild(cloud);
+        cursorCloudTrail.push(cloud);
 
-        if (cursorTrail.length > trailLength) {
-            const oldTrail = cursorTrail.shift();
-            oldTrail.style.opacity = '0';
-            setTimeout(() => oldTrail.remove(), 500);
+        // Drift upward and fade so the trail feels airy
+        requestAnimationFrame(() => {
+            cloud.style.opacity = '0';
+            cloud.style.transform = `translate(-50%, -65%) rotate(${tilt * 1.5}deg) scale(1.05)`;
+        });
+
+        if (cursorCloudTrail.length > cloudTrailLength) {
+            const oldCloud = cursorCloudTrail.shift();
+            oldCloud.style.opacity = '0';
+            setTimeout(() => oldCloud.remove(), 500);
         }
 
-        setTimeout(() => {
-            trail.style.opacity = '0';
-        }, 300);
+        setTimeout(() => cloud.remove(), 900);
     }
 });
 
