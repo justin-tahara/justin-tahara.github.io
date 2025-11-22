@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Justin Tahara - Founding Infra Engineer at Onyx AI, passionate about software engineering, photography, and soccer.">
     <title>Justin Tahara | Software Engineer</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 72 72'%3E%3Ctext y='50' x='10' font-size='48'%3E%F0%9F%91%BB%3C/text%3E%3C/svg%3E">
     <link rel="stylesheet" href="styles.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -67,7 +68,7 @@
                         scalable infrastructure that powers cutting-edge AI applications.
                     </p>
                     <p>
-                        My journey in tech spans from tutoring CS students at UC San Diego to working at companies like
+                        My journey in tech starts with tutoring CS students at UC San Diego to working at companies like
                         <strong>Applied Intuition</strong>, <strong>Amazon</strong>, and <strong>Western Digital</strong>.
                         I've gained experience across the spectrum—from Silicon Valley startups to established tech giants.
                     </p>
@@ -103,13 +104,17 @@
                     <h3>Technical Skills</h3>
                     <div class="skills-grid">
                         <div class="skill-item">Infrastructure</div>
-                        <div class="skill-item">Python</div>
                         <div class="skill-item">Distributed Systems</div>
-                        <div class="skill-item">Cloud Architecture</div>
-                        <div class="skill-item">Docker/K8s</div>
-                        <div class="skill-item">CI/CD</div>
-                        <div class="skill-item">Backend Engineering</div>
-                        <div class="skill-item">System Design</div>
+                        <div class="skill-item">Python</div>
+                        <div class="skill-item">Golang</div>
+                        <div class="skill-item">Java</div>
+                        <div class="skill-item">Kubernetes</div>
+                        <div class="skill-item">Terraform</div>
+                        <div class="skill-item">AWS/GCP/Azure</div>
+                        <div class="skill-item">CI/CD (Buildkite)</div>
+                        <div class="skill-item">Observability (Prometheus/Grafana)</div>
+                        <div class="skill-item">Security (SAML/OIDC/SCIM)</div>
+                        <div class="skill-item">Cost Optimization</div>
                     </div>
                 </div>
             </div>
@@ -120,34 +125,59 @@
     <section class="experience section" id="experience">
         <div class="container">
             <h2 class="section-title">Experience</h2>
-            <div class="timeline">
+                <div class="timeline">
                 <div class="timeline-item">
                     <div class="timeline-marker"></div>
                     <div class="timeline-content">
-                        <div class="timeline-date">2023 - Present</div>
-                        <h3>Founding Infrastructure Engineer</h3>
-                        <h4>Onyx AI</h4>
-                        <p>Building the foundational infrastructure for next-generation AI applications. Designing and implementing scalable systems that support rapid growth and innovation.</p>
+                        <div class="timeline-date">2025 - Present</div>
+                        <div class="company-header">
+                            <div class="company-logo company-logo--onyx">
+                                <img src="images/logos/onyx.jpg" alt="Onyx AI logo">
+                            </div>
+                            <div>
+                                <h3>Founding Infrastructure Engineer</h3>
+                                <h4>Onyx AI</h4>
+                            </div>
+                        </div>
+                        <p>Building the foundational infrastructure for Onyx AI's open-source AI enterprise search platform.</p>
                         <div class="tags">
                             <span class="tag">Infrastructure</span>
                             <span class="tag">Cloud</span>
                             <span class="tag">AI/ML</span>
                         </div>
+                        <div class="more-links">
+                            <a class="more-link" href="Onyx.html">
+                                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 3h7v7h-2V6.41l-9.29 9.3-1.42-1.42 9.3-9.29H14V3ZM5 5h5v2H7v10h10v-3h2v5H5V5Z"/></svg>
+                                Details
+                            </a>
+                        </div>
                     </div>
                 </div>
-
                 <div class="timeline-item">
                     <div class="timeline-marker"></div>
                     <div class="timeline-content">
                         <div class="timeline-date">Previous</div>
-                        <h3>Software Engineer</h3>
-                        <h4>Applied Intuition</h4>
+                        <div class="company-header">
+                            <div class="company-logo">
+                                <img src="images/logos/applied-intuition.gif" alt="Applied Intuition logo">
+                            </div>
+                            <div>
+                                <h3>Software Engineer</h3>
+                                <h4>Applied Intuition</h4>
+                            </div>
+                        </div>
                         <p>Worked on autonomous vehicle simulation and testing infrastructure, contributing to tools used by leading automotive companies.</p>
                         <div class="tags">
                             <span class="tag">Autonomous Vehicles</span>
                             <span class="tag">Simulation</span>
                             <span class="tag">Testing</span>
                         </div>
+                        <div class="more-links">
+                            <a class="more-link" href="AppliedIntuition.html">
+                                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 3h7v7h-2V6.41l-9.29 9.3-1.42-1.42 9.3-9.29H14V3ZM5 5h5v2H7v10h10v-3h2v5H5V5Z"/></svg>
+                                Details
+                            </a>
+                        </div>
                     </div>
                 </div>
 
@@ -155,14 +185,27 @@
                     <div class="timeline-marker"></div>
                     <div class="timeline-content">
                         <div class="timeline-date">Previous</div>
-                        <h3>Software Development Engineer</h3>
-                        <h4>Amazon</h4>
+                        <div class="company-header">
+                            <div class="company-logo">
+                                <img src="images/logos/amazon.gif" alt="Amazon logo">
+                            </div>
+                            <div>
+                                <h3>Software Development Engineer</h3>
+                                <h4>Amazon</h4>
+                            </div>
+                        </div>
                         <p>Developed and maintained large-scale distributed systems serving millions of customers worldwide.</p>
                         <div class="tags">
                             <span class="tag">Distributed Systems</span>
                             <span class="tag">AWS</span>
                             <span class="tag">Scalability</span>
                         </div>
+                        <div class="more-links">
+                            <a class="more-link" href="Amazon.html">
+                                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 3h7v7h-2V6.41l-9.29 9.3-1.42-1.42 9.3-9.29H14V3ZM5 5h5v2H7v10h10v-3h2v5H5V5Z"/></svg>
+                                Details
+                            </a>
+                        </div>
                     </div>
                 </div>
 
@@ -170,15 +213,42 @@
                     <div class="timeline-marker"></div>
                     <div class="timeline-content">
                         <div class="timeline-date">Previous</div>
-                        <h3>Head Tutor</h3>
-                        <h4>UC San Diego CSE Department</h4>
+                        <div class="company-header">
+                            <div class="company-logo">
+                                <img src="images/logos/ucsd.png" alt="UCSD logo">
+                            </div>
+                            <div>
+                                <h3>Head Tutor</h3>
+                                <h4>UC San Diego CSE Department</h4>
+                            </div>
+                        </div>
                         <p>Led tutoring sessions for computer science courses, helping hundreds of students master complex programming concepts.</p>
                         <div class="tags">
                             <span class="tag">Education</span>
                             <span class="tag">Mentorship</span>
                             <span class="tag">CS Fundamentals</span>
                         </div>
+                        <div class="more-links">
+                            <a class="more-link" href="UCSD.html">
+                                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 3h7v7h-2V6.41l-9.29 9.3-1.42-1.42 9.3-9.29H14V3ZM5 5h5v2H7v10h10v-3h2v5H5V5Z"/></svg>
+                                Details
+                            </a>
+                        </div>
                     </div>
+                </div>
+                <div class="more-links">
+                    <a class="more-link" href="WD.html">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 3h7v7h-2V6.41l-9.29 9.3-1.42-1.42 9.3-9.29H14V3ZM5 5h5v2H7v10h10v-3h2v5H5V5Z"/></svg>
+                        Western Digital
+                    </a>
+                    <a class="more-link" href="NIWC.html">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 3h7v7h-2V6.41l-9.29 9.3-1.42-1.42 9.3-9.29H14V3ZM5 5h5v2H7v10h10v-3h2v5H5V5Z"/></svg>
+                        NIWC
+                    </a>
+                    <a class="more-link" href="CHP.html">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 3h7v7h-2V6.41l-9.29 9.3-1.42-1.42 9.3-9.29H14V3ZM5 5h5v2H7v10h10v-3h2v5H5V5Z"/></svg>
+                        CHP
+                    </a>
                 </div>
             </div>
         </div>
@@ -194,8 +264,8 @@
                     <h3>Coding</h3>
                     <p>
                         Beyond my professional work, I love exploring new technologies and building side projects.
-                        Whether it's experimenting with the latest frameworks or contributing to open source,
-                        coding is both my career and my passion.
+                        Tinkering with my Synology NAS and building my own home lab to self serve my own photo workflows.
+                        Whether I'm coding for work or for fun, it's always fun to learn something new.
                     </p>
                 </div>
 
@@ -203,9 +273,9 @@
                     <div class="hobby-icon">📷</div>
                     <h3>Photography</h3>
                     <p>
-                        I capture landscapes and portraits using my <strong>Sony A7III</strong> and <strong>Nikon F3</strong>.
-                        My work has been exhibited in museums, and I'm always searching for the perfect light and composition.
-                        Photography teaches me to see the world from different perspectives.
+                        I capture landscapes and portraits using my <strong>Sony A7III</strong> and <strong>Ricoh GR1V</strong>.
+                        Mainly focusing on enjoying my hobby but I have displayed my work in museums and won awards.
+                        Maybe you've seen some of my work in some Applied blog posts!
                     </p>
                 </div>
 
@@ -213,9 +283,9 @@
                     <div class="hobby-icon">⚽</div>
                     <h3>Soccer</h3>
                     <p>
-                        I've been playing soccer since I was 9 years old. It's more than just a sport—it's a way of life.
-                        I follow <strong>Borussia Dortmund</strong>, <strong>FC Barcelona</strong>, and <strong>LA Galaxy</strong>,
-                        and try to catch games whenever possible.
+                        I've been playing soccer since I was 9 years old. Played club and still play pickup games when I can.
+                        My favorite teams are <strong>Borussia Dortmund</strong>, <strong>FC Barcelona</strong>, and <strong>LA Galaxy</strong>,
+                        and I'm always down to watch a game.
                     </p>
                 </div>
             </div>
@@ -233,17 +303,23 @@
                 </p>
                 <div class="contact-methods">
                     <a href="mailto:justintahara@gmail.com" class="contact-card">
-                        <div class="contact-icon">✉️</div>
+                        <div class="contact-icon">
+                            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16c1.1 0 2 .9 2 2v10c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V7c0-1.1.9-2 2-2zm0 2v.35l8 5.15 8-5.15V7H4zm16 10V9.4l-7.36 4.73a1 1 0 0 1-1.08 0L4 9.4V17h16z"/></svg>
+                        </div>
                         <h3>Email</h3>
                         <p>justintahara@gmail.com</p>
                     </a>
                     <a href="https://www.linkedin.com/in/justintahara/" target="_blank" rel="noopener noreferrer" class="contact-card">
-                        <div class="contact-icon">💼</div>
+                        <div class="contact-icon">
+                            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.94 8.5v10H3.69v-10h3.25zM5.32 7.1C4.25 7.1 3.4 6.24 3.4 5.18c0-1.06.86-1.92 1.92-1.92 1.06 0 1.92.86 1.92 1.92 0 1.06-.86 1.92-1.92 1.92zM20.6 18.5h-3.23v-5.2c0-1.24-.02-2.84-1.73-2.84-1.73 0-1.99 1.35-1.99 2.75v5.29h-3.23v-10h3.1v1.37h.04c.43-.82 1.48-1.68 3.05-1.68 3.26 0 3.86 2.14 3.86 4.93v5.38z"/></svg>
+                        </div>
                         <h3>LinkedIn</h3>
                         <p>@justintahara</p>
                     </a>
                     <a href="https://github.com/justin-tahara" target="_blank" rel="noopener noreferrer" class="contact-card">
-                        <div class="contact-icon">🐙</div>
+                        <div class="contact-icon">
+                            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 .5C5.65.5.5 5.65.5 12c0 5.08 3.29 9.38 7.86 10.9.58.1.79-.25.79-.56v-1.97c-3.2.7-3.88-1.37-3.88-1.37-.52-1.32-1.28-1.67-1.28-1.67-1.05-.72.08-.71.08-.71 1.17.08 1.79 1.2 1.79 1.2 1.03 1.76 2.7 1.25 3.36.96.1-.75.4-1.25.72-1.54-2.55-.29-5.24-1.27-5.24-5.64 0-1.25.45-2.27 1.19-3.07-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.18 1.17A11.1 11.1 0 0 1 12 6.8c.98.01 1.97.13 2.89.39 2.2-1.48 3.17-1.17 3.17-1.17.64 1.59.24 2.76.12 3.05.74.8 1.19 1.82 1.19 3.07 0 4.38-2.7 5.34-5.27 5.62.42.36.79 1.07.79 2.16v3.2c0 .31.21.67.8.56A10.52 10.52 0 0 0 23.5 12C23.5 5.65 18.35.5 12 .5z"/></svg>
+                        </div>
                         <h3>GitHub</h3>
                         <p>@justin-tahara</p>
                     </a>
@@ -255,11 +331,17 @@
     <!-- Footer -->
     <footer class="footer">
         <div class="container">
-            <p>&copy; 2025 Justin Tahara. Built with care and lots of animations.</p>
+            <p>&copy; 2025 Justin Tahara.</p>
             <div class="social-links">
-                <a href="https://www.linkedin.com/in/justintahara/" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn">LinkedIn</a>
-                <a href="https://github.com/justin-tahara" target="_blank" rel="noopener noreferrer" aria-label="GitHub">GitHub</a>
-                <a href="https://www.instagram.com/justintahara/" target="_blank" rel="noopener noreferrer" aria-label="Instagram">Instagram</a>
+                <a href="https://www.linkedin.com/in/justintahara/" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.94 8.5v10H3.69v-10h3.25zM5.32 7.1C4.25 7.1 3.4 6.24 3.4 5.18c0-1.06.86-1.92 1.92-1.92 1.06 0 1.92.86 1.92 1.92 0 1.06-.86 1.92-1.92 1.92zM20.6 18.5h-3.23v-5.2c0-1.24-.02-2.84-1.73-2.84-1.73 0-1.99 1.35-1.99 2.75v5.29h-3.23v-10h3.1v1.37h.04c.43-.82 1.48-1.68 3.05-1.68 3.26 0 3.86 2.14 3.86 4.93v5.38z"/></svg>
+                </a>
+                <a href="https://github.com/justin-tahara" target="_blank" rel="noopener noreferrer" aria-label="GitHub">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 .5C5.65.5.5 5.65.5 12c0 5.08 3.29 9.38 7.86 10.9.58.1.79-.25.79-.56v-1.97c-3.2.7-3.88-1.37-3.88-1.37-.52-1.32-1.28-1.67-1.28-1.67-1.05-.72.08-.71.08-.71 1.17.08 1.79 1.2 1.79 1.2 1.03 1.76 2.7 1.25 3.36.96.1-.75.4-1.25.72-1.54-2.55-.29-5.24-1.27-5.24-5.64 0-1.25.45-2.27 1.19-3.07-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.18 1.17A11.1 11.1 0 0 1 12 6.8c.98.01 1.97.13 2.89.39 2.2-1.48 3.17-1.17 3.17-1.17.64 1.59.24 2.76.12 3.05.74.8 1.19 1.82 1.19 3.07 0 4.38-2.7 5.34-5.27 5.62.42.36.79 1.07.79 2.16v3.2c0 .31.21.67.8.56A10.52 10.52 0 0 0 23.5 12C23.5 5.65 18.35.5 12 .5z"/></svg>
+                </a>
+                <a href="https://www.instagram.com/justintahara/" target="_blank" rel="noopener noreferrer" aria-label="Instagram">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3h10a4 4 0 0 1 4 4v10a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4V7a4 4 0 0 1 4-4zm0 2a2 2 0 0 0-2 2v10c0 1.1.9 2 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2H7zm5 3.3A3.7 3.7 0 1 1 8.3 12 3.7 3.7 0 0 1 12 8.3zm0 1.9A1.8 1.8 0 1 0 13.8 12 1.8 1.8 0 0 0 12 10.2zm4.25-3.45a.9.9 0 1 1-.9.9.9.9 0 0 1 .9-.9z"/></svg>
+                </a>
             </div>
         </div>
     </footer>
