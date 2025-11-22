@@ -105,18 +105,6 @@ window.addEventListener('scroll', () => {
     }
 });
 
-// ===== Dynamic Typing Effect (Optional Enhancement) =====
-const heroTitle = document.querySelector('.hero-title');
-if (heroTitle) {
-    const originalText = heroTitle.innerHTML;
-    const words = originalText.split(' ');
-
-    // Wrap each word in a span for animation
-    heroTitle.innerHTML = words.map((word, index) => {
-        return `<span style="display: inline-block; opacity: 0; animation: fadeInUp 0.5s ease ${0.4 + (index * 0.1)}s forwards;">${word}</span>`;
-    }).join(' ');
-}
-
 // ===== Cursor Trail Effect (Subtle) =====
 let cursorTrail = [];
 const trailLength = 5;
@@ -206,18 +194,6 @@ achievementCards.forEach(card => {
         this.style.transform = 'translateY(0) rotate(0)';
     });
 });
-
-// ===== Profile Image Interaction =====
-const profileImg = document.getElementById('profile-img');
-if (profileImg) {
-    profileImg.addEventListener('mouseenter', function() {
-        this.style.transform = 'scale(1.1) rotate(5deg)';
-    });
-
-    profileImg.addEventListener('mouseleave', function() {
-        this.style.transform = 'scale(1) rotate(0)';
-    });
-}
 
 // ===== Active Section Highlighting in Nav =====
 const sections = document.querySelectorAll('section[id]');
