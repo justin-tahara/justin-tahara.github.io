@@ -1,0 +1,13 @@
+# Optional: auto-load creds when you `cd` into this directory (closest thing to
+# `aws sso login` ergonomics — no manual `source` needed).
+#
+# Setup:
+#   brew install direnv
+#   # add the shell hook, e.g. for bash:  eval "$(direnv hook bash)"  in ~/.bashrc
+#   cp .envrc.example .envrc
+#   direnv allow
+#
+# After that, entering this dir loads the creds from Keychain automatically and
+# leaving it unloads them.
+
+source ./scripts/cf-env.sh
