@@ -1,0 +1,9 @@
+# Never commit state or secrets — state lives in R2, not this public repo.
+*.tfstate
+*.tfstate.*
+*.tfvars
+*.tfvars.json
+import.tf
+.terraform/
+
+# .terraform.lock.hcl is intentionally committed (provider version pin).
