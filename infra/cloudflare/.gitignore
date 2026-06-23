@@ -1,29 +1,9 @@
-# --- Terraform ---
-# State must NEVER be committed (it lives in R2 and can contain secrets in plaintext).
-# Belt-and-suspenders even though we use a remote backend.
+# Never commit state or secrets — state lives in R2, not this public repo.
 *.tfstate
 *.tfstate.*
-
-# Local variable files & secrets
 *.tfvars
 *.tfvars.json
-!*.tfvars.example
-
-# Partial/local backend config that may hold the R2 account id or bucket name
-backend.hcl
-
-# Auto-generated, one-shot import blocks (see scripts/generate-imports.sh)
 import.tf
-
-# direnv local config (may be customized); keep .envrc.example tracked
-.envrc
-.direnv/
-
-# Terraform working directories & crash logs
 .terraform/
-.terraform.tfstate.lock.info
-crash.log
-crash.*.log
 
-# Provider checksum lock file (.terraform.lock.hcl) is intentionally NOT ignored —
-# it should be committed so provider versions are reproducible.
+# .terraform.lock.hcl is intentionally committed (provider version pin).
