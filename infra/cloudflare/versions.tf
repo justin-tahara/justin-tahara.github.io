@@ -15,12 +15,12 @@ terraform {
   # never hardcoded here. The bucket name and account-id endpoint below are NOT secret.
   # See README.md > "One-time setup".
   backend "s3" {
-    bucket = "REPLACE_ME-tfstate"                  # TODO: your R2 bucket name
+    bucket = "personal-website-tfstate"            # R2 bucket
     key    = "cloudflare/justintahara.com.tfstate" # path of the state object inside the bucket
     region = "auto"
 
     endpoints = {
-      s3 = "https://REPLACE_ME_ACCOUNT_ID.r2.cloudflarestorage.com" # TODO: your R2 account id
+      s3 = "https://3f39f1776b14aa612ab7070166088a1d.r2.cloudflarestorage.com" # R2 account id
     }
 
     # R2 speaks the S3 API but is not AWS — disable AWS-only behaviors so init/plan succeed.

@@ -6,7 +6,7 @@
 provider "cloudflare" {} # token read from CLOUDFLARE_API_TOKEN
 
 locals {
-  zone_id            = "REPLACE_ME_ZONE_ID" # Cloudflare dashboard > the domain > Overview
+  zone_id            = "9ad4743499153c6eb824add376496adb" # justintahara.com
   domain             = "justintahara.com"
   github_pages_cname = "justin-tahara.github.io"
   github_pages_ipv4 = [
