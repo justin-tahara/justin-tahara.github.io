@@ -1,0 +1,98 @@
+name: terraform-plan
+
+# Runs fmt / validate / plan on PRs that touch the Cloudflare module and posts
+# the result as a PR comment. Plan only — never applies. Secrets are available
+# for same-repo PRs only (fork PRs run without creds and the plan step is skipped).
+
+on:
+  pull_request:
+    paths:
+      - "infra/cloudflare/**"
+      - ".github/workflows/terraform-plan.yml"
+
+permissions:
+  contents: read
+  pull-requests: write
+
+concurrency:
+  group: terraform-plan-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: infra/cloudflare
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.15.6
+
+      - name: fmt
+        id: fmt
+        run: terraform fmt -check -recursive
+        continue-on-error: true
+
+      - name: init
+        id: init
+        run: terraform init -input=false
+
+      - name: validate
+        id: validate
+        run: terraform validate -no-color
+
+      - name: plan
+        id: plan
+        run: terraform plan -input=false -no-color -lock=false
+        continue-on-error: true
+
+      - name: comment
+        uses: actions/github-script@v7
+        env:
+          PLAN: ${{ steps.plan.outputs.stdout }}
+        with:
+          script: |
+            const max = 60000;
+            let plan = (process.env.PLAN || "(no output)").trim();
+            if (plan.length > max) plan = plan.slice(0, max) + "\n... (truncated)";
+            const body = [
+              "### Terraform plan",
+              "",
+              "| step | result |",
+              "| --- | --- |",
+              "| fmt | `${{ steps.fmt.outcome }}` |",
+              "| init | `${{ steps.init.outcome }}` |",
+              "| validate | `${{ steps.validate.outcome }}` |",
+              "| plan | `${{ steps.plan.outcome }}` |",
+              "",
+              "<details><summary>Show plan</summary>",
+              "",
+              "```terraform",
+              plan,
+              "```",
+              "</details>",
+            ].join("\n");
+            const { data: comments } = await github.rest.issues.listComments({
+              ...context.repo, issue_number: context.issue.number,
+            });
+            const prev = comments.find(
+              (c) => c.user.type === "Bot" && c.body.startsWith("### Terraform plan"),
+            );
+            if (prev) {
+              await github.rest.issues.updateComment({ ...context.repo, comment_id: prev.id, body });
+            } else {
+              await github.rest.issues.createComment({ ...context.repo, issue_number: context.issue.number, body });
+            }
+
+      - name: fail if plan errored
+        if: steps.plan.outcome == 'failure'
+        run: |
+          echo "terraform plan failed — see the PR comment for details"
+          exit 1
