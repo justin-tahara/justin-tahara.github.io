@@ -1,0 +1,66 @@
+name: site-ci
+
+# Quality gate for the static site. GitHub Pages deploys straight from main with
+# no build, so this is the only thing standing between a bad commit and prod.
+# Runs on PRs that touch site content (not infra-only or workflow-only changes).
+
+on:
+  pull_request:
+    paths:
+      - "**/*.html"
+      - "assets/**"
+      - ".github/workflows/site-ci.yml"
+      - ".htmlvalidate.json"
+      - "lighthouserc.json"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: site-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  links:
+    name: link check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: lychee
+        uses: lycheeverse/lychee-action@v2
+        with:
+          # Internal links are the real restructure risk; social/auth-walled
+          # hosts answer bots with 403/999, so exclude them to avoid flakiness.
+          args: >-
+            --no-progress --exclude-mail
+            --exclude linkedin.com --exclude instagram.com
+            "index.html" "experience/**/*.html"
+          fail: true
+
+  html:
+    name: html validate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: html-validate
+        run: npx --yes html-validate@9 index.html "experience/**/*.html"
+
+  lighthouse:
+    name: lighthouse
+    runs-on: ubuntu-latest
+    # Informational: reports perf/a11y/SEO/best-practices on every PR. Thresholds
+    # are "warn" (see lighthouserc.json) so scores are visible without blocking;
+    # flip to "error" once a baseline is established. Note: CI scores run without
+    # the Cloudflare edge headers, so production best-practices will score higher.
+    steps:
+      - uses: actions/checkout@v4
+      - name: Lighthouse CI
+        uses: treosh/lighthouse-ci-action@v12
+        with:
+          configPath: ./lighthouserc.json
+          uploadArtifacts: true
+          temporaryPublicStorage: true
