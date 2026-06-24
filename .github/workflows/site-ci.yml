@@ -33,8 +33,8 @@ jobs:
           # Internal links are the real restructure risk; social/auth-walled
           # hosts answer bots with 403/999, so exclude them to avoid flakiness.
           args: >-
-            --no-progress --exclude-mail
-            --exclude linkedin.com --exclude instagram.com
+            --no-progress
+            --exclude 'mailto:' --exclude linkedin.com --exclude instagram.com
             "index.html" "experience/**/*.html"
           fail: true
 
