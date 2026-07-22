@@ -3,7 +3,9 @@
 
 locals {
   # Content-Security-Policy tailored to what the site actually loads:
-  #   - scripts: only the local script.js (no inline <script>) -> no 'unsafe-inline'
+  #   - scripts: the local script.js (no inline <script> -> no 'unsafe-inline')
+  #              + the Web Analytics beacon the edge auto-injects
+  #              (observability.tf); its posts go to cloudflareinsights.com
   #   - styles:  Google Fonts stylesheet + one inline style= attr (UCSD page)
   #   - fonts:   Google Fonts (fonts.gstatic.com)
   #   - images:  self + the inline data: favicon + the R2 photos host (photos.tf)
@@ -13,11 +15,11 @@ locals {
   # 'unsafe-inline' from style-src entirely.
   csp = join("; ", [
     "default-src 'self'",
-    "script-src 'self'",
+    "script-src 'self' https://static.cloudflareinsights.com",
     "style-src 'self' https://fonts.googleapis.com 'unsafe-inline'",
     "font-src 'self' https://fonts.gstatic.com",
     "img-src 'self' data: https://images.justintahara.com",
-    "connect-src 'self' https://images.justintahara.com",
+    "connect-src 'self' https://images.justintahara.com https://cloudflareinsights.com",
     "frame-ancestors 'none'",
     "base-uri 'self'",
     "form-action 'self'",

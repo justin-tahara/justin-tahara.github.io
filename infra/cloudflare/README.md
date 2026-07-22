@@ -13,6 +13,7 @@ Namecheap to Cloudflare. The site is GitHub Pages fronted by Cloudflare's edge
 | `security.tf`   | Security response headers + a tailored Content-Security-Policy + HSTS      |
 | `redirects.tf`  | 301s for the old root URLs (`/Amazon.html` → `/experience/…`) + www → apex |
 | `photos.tf`     | R2 photos bucket + `images.justintahara.com` custom domain + CORS          |
+| `observability.tf` | Cloudflare Web Analytics (privacy-first RUM, edge-injected beacon)      |
 
 TLS is intentionally **full**, not full-strict: GitHub Pages renews its origin
 cert via an HTTP-01 challenge that a proxy can disrupt, and "full" keeps the

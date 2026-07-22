@@ -1,0 +1,86 @@
+name: link-health
+
+# Weekly sweep of EVERY link on the site, external ones included. The PR-time
+# link check (site-ci) only guards internal links at change time; external
+# targets rot on their own schedule — this catches that. Same alerting shape
+# as terraform-drift: red run + one issue, updated in place, closed when clean.
+
+on:
+  schedule:
+    - cron: "29 15 * * 2" # Tuesdays
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  links:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: lychee (all links, incl. external)
+        id: lychee
+        uses: lycheeverse/lychee-action@v2
+        with:
+          # linkedin/instagram answer bots with 403/999 — permanent false
+          # positives, excluded here just like in site-ci.
+          args: >-
+            --no-progress
+            --exclude 'mailto:' --exclude linkedin.com --exclude instagram.com
+            "index.html" "experience/**/*.html"
+          output: lychee-report.md
+          fail: false
+
+      - name: open/update or close the broken-links issue
+        uses: actions/github-script@v7
+        env:
+          EXITCODE: ${{ steps.lychee.outputs.exit_code }}
+        with:
+          script: |
+            const fs = require("fs");
+            const broken = process.env.EXITCODE !== "0";
+            const title = "Broken links detected on the live site";
+            const { data: open } = await github.rest.issues.listForRepo({
+              ...context.repo, state: "open", labels: "link-health",
+            });
+            const existing = open.find((i) => i.title === title);
+
+            if (!broken) {
+              if (existing) {
+                await github.rest.issues.createComment({
+                  ...context.repo, issue_number: existing.number,
+                  body: "Latest weekly sweep is clean. Closing.",
+                });
+                await github.rest.issues.update({
+                  ...context.repo, issue_number: existing.number, state: "closed",
+                });
+              }
+              return;
+            }
+
+            const run = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+            let report = "(no report generated)";
+            try { report = fs.readFileSync("lychee-report.md", "utf8").trim(); } catch {}
+            if (report.length > 60000) report = report.slice(0, 60000) + "\n... (truncated)";
+            const body = [
+              "The weekly [link sweep](" + run + ") found dead links. External sites move —",
+              "fix or drop the references below.",
+              "",
+              report,
+            ].join("\n");
+
+            if (existing) {
+              await github.rest.issues.update({ ...context.repo, issue_number: existing.number, body });
+            } else {
+              await github.rest.issues.create({
+                ...context.repo, title, body, labels: ["link-health"],
+              });
+            }
+
+      - name: fail the run on broken links
+        if: steps.lychee.outputs.exit_code != '0'
+        run: |
+          echo "broken links found — see the link-health issue"
+          exit 1
