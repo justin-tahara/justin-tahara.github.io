@@ -19,6 +19,11 @@ terraform {
     key    = "cloudflare/justintahara.com.tfstate" # path of the state object inside the bucket
     region = "auto"
 
+    # Native S3 lockfile (a .tflock object next to the state, created with an
+    # If-None-Match conditional write, which R2 supports). Prevents two applies
+    # from racing the same state — there is no DynamoDB fallback outside AWS.
+    use_lockfile = true
+
     endpoints = {
       s3 = "https://3f39f1776b14aa612ab7070166088a1d.r2.cloudflarestorage.com" # R2 account id
     }

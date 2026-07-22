@@ -1,0 +1,114 @@
+name: edge-verify
+
+# Verifies the LIVE edge behaves the way infra/cloudflare/ says it should.
+# terraform-apply proves the API accepted the config; this proves the site
+# actually serves it: redirects, security headers, TLS floor, edge cache.
+#
+# Runs after every successful terraform-apply, on a daily schedule (doubling
+# as an uptime check), and on demand. Pure curl — no creds, no state access.
+
+on:
+  workflow_run:
+    workflows: [terraform-apply]
+    types: [completed]
+  schedule:
+    - cron: "17 15 * * *" # daily; minute chosen off the hour to avoid cron spikes
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    # For workflow_run triggers, only verify after an apply that succeeded.
+    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
+    env:
+      HOST: justintahara.com
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: site is up (HTTPS, 200, real content)
+        run: |
+          body=$(curl -sS --fail --max-time 30 "https://$HOST/")
+          echo "$body" | grep -q "Justin Tahara"
+
+      - name: http -> https redirect
+        run: |
+          code=$(curl -sS -o /dev/null -w '%{http_code}' --max-time 30 "http://$HOST/")
+          loc=$(curl -sSI --max-time 30 "http://$HOST/" | tr -d '\r' | awk 'tolower($1)=="location:"{print $2}')
+          echo "code=$code location=$loc"
+          [ "$code" = "301" ] || [ "$code" = "308" ]
+          case "$loc" in https://*) ;; *) echo "not upgraded to https"; exit 1;; esac
+
+      - name: www -> apex redirect preserves path
+        run: |
+          loc=$(curl -sSI --max-time 30 "https://www.$HOST/resume/Justin_Tahara_2025_Resume.pdf" \
+            | tr -d '\r' | awk 'tolower($1)=="location:"{print $2}')
+          echo "location=$loc"
+          [ "$loc" = "https://$HOST/resume/Justin_Tahara_2025_Resume.pdf" ]
+
+      - name: legacy URLs 301 to /experience/ (full redirect map)
+        run: |
+          declare -A map=(
+            [/Amazon.html]=/experience/amazon.html
+            [/AppliedIntuition.html]=/experience/applied-intuition.html
+            [/CHP.html]=/experience/chp.html
+            [/NIWC.html]=/experience/niwc.html
+            [/Onyx.html]=/experience/onyx.html
+            [/UCSD.html]=/experience/ucsd.html
+            [/WD.html]=/experience/wd.html
+          )
+          fail=0
+          for from in "${!map[@]}"; do
+            want="https://$HOST${map[$from]}"
+            got=$(curl -sSI --max-time 30 "https://$HOST$from" | tr -d '\r' | awk 'tolower($1)=="location:"{print $2}')
+            if [ "$got" = "$want" ]; then
+              echo "ok   $from -> $got"
+            else
+              echo "FAIL $from -> ${got:-<no redirect>} (want $want)"
+              fail=1
+            fi
+          done
+          exit $fail
+
+      - name: security headers present
+        run: |
+          headers=$(curl -sSI --max-time 30 "https://$HOST/" | tr -d '\r')
+          fail=0
+          for h in \
+            "strict-transport-security" \
+            "content-security-policy" \
+            "x-content-type-options" \
+            "referrer-policy" \
+            "permissions-policy" \
+            "cross-origin-opener-policy"; do
+            if echo "$headers" | grep -qi "^$h:"; then
+              echo "ok   $h"
+            else
+              echo "FAIL missing $h"
+              fail=1
+            fi
+          done
+          # HSTS must carry the long max-age we set in security.tf
+          echo "$headers" | grep -qi "^strict-transport-security:.*max-age=31536000" || { echo "FAIL hsts max-age"; fail=1; }
+          exit $fail
+
+      - name: TLS floor is 1.2 (1.0/1.1 rejected)
+        run: |
+          if curl -sS --tls-max 1.1 --max-time 30 -o /dev/null "https://$HOST/" 2>/dev/null; then
+            echo "FAIL: TLS 1.1 handshake was accepted"
+            exit 1
+          fi
+          echo "ok: TLS <=1.1 rejected"
+
+      - name: static assets are edge-cached
+        run: |
+          url="https://$HOST/assets/css/styles.css"
+          curl -sS -o /dev/null "$url"   # warm the cache
+          status=$(curl -sSI --max-time 30 "$url" | tr -d '\r' | awk 'tolower($1)=="cf-cache-status:"{print $2}')
+          echo "cf-cache-status=$status"
+          case "$status" in
+            HIT|MISS|EXPIRED|REVALIDATED) ;;                       # proxied + cache rule active
+            *) echo "FAIL: no cf-cache-status header (not proxied, or cache rule missing)"; exit 1;;
+          esac
