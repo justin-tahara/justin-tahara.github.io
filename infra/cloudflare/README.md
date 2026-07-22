@@ -12,6 +12,7 @@ Namecheap to Cloudflare. The site is GitHub Pages fronted by Cloudflare's edge
 | `edge.tf`       | Zone TLS settings (SSL "full", HTTPS-only, min TLS 1.2) + static caching   |
 | `security.tf`   | Security response headers + a tailored Content-Security-Policy + HSTS      |
 | `redirects.tf`  | 301s for the old root URLs (`/Amazon.html` → `/experience/…`) + www → apex |
+| `photos.tf`     | R2 photos bucket + `images.justintahara.com` custom domain + CORS          |
 
 TLS is intentionally **full**, not full-strict: GitHub Pages renews its origin
 cert via an HTTP-01 challenge that a proxy can disrupt, and "full" keeps the
@@ -28,7 +29,9 @@ Fill the placeholders:
 Create an **R2 bucket** + R2 API token (Object Read & Write) for state, and a
 **Cloudflare API token** scoped to the zone. With the edge resources the token now
 needs these Zone permissions (Edit unless noted):
-DNS, Zone (Read), Zone Settings, Cache Rules, Transform Rules, Dynamic Redirect.
+DNS, Zone (Read), Zone Settings, Cache Rules, Transform Rules, Dynamic Redirect —
+plus the Account permission **Workers R2 Storage (Edit)** for the photos bucket,
+its custom domain, and CORS (`photos.tf`).
 Stash all three in macOS Keychain once:
 
 ```sh
@@ -74,8 +77,18 @@ After approving the apply, verify:
 Rollback is a revert: set `proxied = false` in `main.tf` (or revert the commit),
 then plan + apply.
 
+## Photo pipeline
+
+Scans live in the `justintahara-photos` R2 bucket (never in git), served at
+`images.justintahara.com` (`photos.tf`), edge-cached 30 days (`edge.tf`), and
+allowed by CSP (`security.tf`). Responsive variants are pre-generated at upload
+time by `scripts/sync-photos.sh` (repo root), which also publishes the
+`manifest.json` the frontend reads — see that script's header for the object
+layout and the immutability convention that makes long caching safe.
+
 ## Roadmap
 
-Polish (WebP/AVIF) and image resizing for the photo portfolio; later, Workers +
-Secrets Store for runtime image transforms. Tighten CSP by removing the lone
-inline `style=` attribute so `style-src` can drop `'unsafe-inline'`.
+Runtime image transforms (auto-WebP/AVIF via Cloudflare) once traffic justifies
+it — pre-generated JPEG variants cover today's need without a paid dependency.
+Tighten CSP by removing the lone inline `style=` attribute so `style-src` can
+drop `'unsafe-inline'`.

@@ -52,5 +52,29 @@ resource "cloudflare_ruleset" "cache" {
         }
       }
     },
+    # Photos host (R2, see photos.tf). Listed AFTER the extension rule because
+    # when multiple cache rules match, the last one wins on conflicting fields —
+    # this gives images.* a 30-day edge TTL instead of the generic 1 day.
+    # Safe because uploads are immutable-by-convention (sync script never
+    # rewrites a variant in place). Browser TTL respects origin: R2 serves the
+    # per-object `public, max-age=31536000, immutable` set at upload.
+    {
+      ref         = "cache_photos_host"
+      description = "Edge-cache the R2 photos host for 30 days"
+      enabled     = true
+      action      = "set_cache_settings"
+      expression  = "(http.host eq \"images.${local.domain}\")"
+
+      action_parameters = {
+        cache = true
+        edge_ttl = {
+          mode    = "override_origin"
+          default = 2592000
+        }
+        browser_ttl = {
+          mode = "respect_origin"
+        }
+      }
+    },
   ]
 }
