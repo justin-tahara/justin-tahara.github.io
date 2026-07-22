@@ -53,7 +53,14 @@ terraform plan && terraform apply              # thereafter
 
 In CI this is automated: **`terraform-plan`** comments the plan on every PR that
 touches this module, and **`terraform-apply`** applies on merge to `main`, gated
-by the `production` GitHub Environment (manual approval required).
+by the `production` GitHub Environment (manual approval required). After each
+successful apply (and daily), **`edge-verify`** curls the live site to prove the
+edge actually serves what this module declares — redirects, headers, TLS floor,
+cache. **`terraform-drift`** plans against live weekly and opens/updates a
+`terraform-drift` issue if the dashboard has diverged from code.
+
+State is locked with the backend's native S3 lockfile (`use_lockfile`) — R2
+supports the conditional write it relies on, so concurrent applies can't race.
 
 ## Rolling out the edge (proxied) change
 
