@@ -17,6 +17,7 @@ provider "cloudflare" {} # token read from CLOUDFLARE_API_TOKEN
 
 locals {
   zone_id            = "9ad4743499153c6eb824add376496adb" # justintahara.com
+  account_id         = "3f39f1776b14aa612ab7070166088a1d" # same id as the R2 state endpoint (versions.tf)
   domain             = "justintahara.com"
   github_pages_cname = "justin-tahara.github.io"
   github_pages_ipv4 = [

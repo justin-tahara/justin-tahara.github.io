@@ -6,7 +6,9 @@ locals {
   #   - scripts: only the local script.js (no inline <script>) -> no 'unsafe-inline'
   #   - styles:  Google Fonts stylesheet + one inline style= attr (UCSD page)
   #   - fonts:   Google Fonts (fonts.gstatic.com)
-  #   - images:  self + the inline data: favicon
+  #   - images:  self + the inline data: favicon + the R2 photos host (photos.tf)
+  #   - connect: self + the photos host (the photography page fetch()es its
+  #              manifest.json and 3D assets from images.justintahara.com)
   # Tighten further by removing the one inline style= attr, which lets us drop
   # 'unsafe-inline' from style-src entirely.
   csp = join("; ", [
@@ -14,8 +16,8 @@ locals {
     "script-src 'self'",
     "style-src 'self' https://fonts.googleapis.com 'unsafe-inline'",
     "font-src 'self' https://fonts.gstatic.com",
-    "img-src 'self' data:",
-    "connect-src 'self'",
+    "img-src 'self' data: https://images.justintahara.com",
+    "connect-src 'self' https://images.justintahara.com",
     "frame-ancestors 'none'",
     "base-uri 'self'",
     "form-action 'self'",
