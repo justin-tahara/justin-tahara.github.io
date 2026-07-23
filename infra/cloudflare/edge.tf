@@ -70,6 +70,15 @@ resource "cloudflare_ruleset" "cache" {
         edge_ttl = {
           mode    = "override_origin"
           default = 2592000
+          # Without this, the 30-day default applies to ERROR responses too: one
+          # probe of a not-yet-uploaded key pins a 404 at the edge for a month
+          # (bitten in practice by manifest.json). Cache errors for 60s only.
+          status_code_ttl = [
+            {
+              status_code_range = { from = 400, to = 599 }
+              value             = 60
+            },
+          ]
         }
         browser_ttl = {
           mode = "respect_origin"
