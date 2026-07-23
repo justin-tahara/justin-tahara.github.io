@@ -73,11 +73,16 @@ shopt -u nullglob nocaseglob
 # manifest.json — the frontend contract:
 # { "titles": { "<roll>": "Display Name" },
 #   "rolls":  { "<roll>": [ { "stem", "original", "width",
-#                             "variants": {"2560": url, ...}, "tags": [...] } ] } }
+#                             "variants": {"2560": url, ...},
+#                             "tags": [...], "place": "..." } ] } }
 # Optional <photos-dir>/meta.json enriches it:
-#   { "titles": { "<roll>": "Display Name" }, "tags": { "<stem>": ["humans", ...] } }
+#   { "titles": { "<roll>": "Display Name" },
+#     "tags":   { "<stem>": ["humans", ...] },
+#     "places": { "<stem>": "San Mateo" } }
 # "titles" gives rolls human names (slug is the fallback); "tags" marks
-# cross-cutting collections (e.g. humans-of-the-world) without duplicating files.
+# cross-cutting collections (e.g. humans-of-the-world) without duplicating
+# files; "places" is the exact-location caption — rolls group by region, so
+# this is where fine-grained geography lives.
 printf '%s\n' "${manifest_rows[@]}" | python3 -c '
 import json, os, sys
 base = "https://images.justintahara.com/rolls"
@@ -86,6 +91,7 @@ meta_path = os.path.join(sys.argv[1], "meta.json")
 if os.path.exists(meta_path):
     meta = json.load(open(meta_path))
 titles, tag_map = meta.get("titles", {}), meta.get("tags", {})
+places = meta.get("places", {})
 rolls = {}
 for line in sys.stdin:
     roll, stem, ext, width, made = line.rstrip("\n").split("|")
@@ -97,6 +103,8 @@ for line in sys.stdin:
     }
     if tag_map.get(stem):
         entry["tags"] = sorted(tag_map[stem])
+    if places.get(stem):
+        entry["place"] = places[stem]
     rolls.setdefault(roll, []).append(entry)
 out = {"rolls": rolls, "titles": {r: titles.get(r, r) for r in rolls}}
 print(json.dumps(out, indent=2, sort_keys=True))
