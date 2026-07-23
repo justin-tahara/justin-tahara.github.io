@@ -71,21 +71,36 @@ shopt -u nullglob nocaseglob
 [ ${#manifest_rows[@]} -gt 0 ] || { echo "✗ no images found under $SRC/<roll>/" >&2; exit 1; }
 
 # manifest.json — the frontend contract:
-# { "rolls": { "<roll>": [ { "stem", "original", "width", "variants": {"2560": url, ...} } ] } }
+# { "titles": { "<roll>": "Display Name" },
+#   "rolls":  { "<roll>": [ { "stem", "original", "width",
+#                             "variants": {"2560": url, ...}, "tags": [...] } ] } }
+# Optional <photos-dir>/meta.json enriches it:
+#   { "titles": { "<roll>": "Display Name" }, "tags": { "<stem>": ["humans", ...] } }
+# "titles" gives rolls human names (slug is the fallback); "tags" marks
+# cross-cutting collections (e.g. humans-of-the-world) without duplicating files.
 printf '%s\n' "${manifest_rows[@]}" | python3 -c '
-import json, sys
+import json, os, sys
 base = "https://images.justintahara.com/rolls"
+meta = {}
+meta_path = os.path.join(sys.argv[1], "meta.json")
+if os.path.exists(meta_path):
+    meta = json.load(open(meta_path))
+titles, tag_map = meta.get("titles", {}), meta.get("tags", {})
 rolls = {}
 for line in sys.stdin:
     roll, stem, ext, width, made = line.rstrip("\n").split("|")
-    rolls.setdefault(roll, []).append({
+    entry = {
         "stem": stem,
         "original": f"{base}/{roll}/{stem}.{ext}",
         "width": int(width),
         "variants": {w: f"{base}/{roll}/{stem}-w{w}.jpg" for w in made.split()},
-    })
-print(json.dumps({"rolls": rolls}, indent=2, sort_keys=True))
-' > "$BUILD/manifest.json"
+    }
+    if tag_map.get(stem):
+        entry["tags"] = sorted(tag_map[stem])
+    rolls.setdefault(roll, []).append(entry)
+out = {"rolls": rolls, "titles": {r: titles.get(r, r) for r in rolls}}
+print(json.dumps(out, indent=2, sort_keys=True))
+' "$SRC" > "$BUILD/manifest.json"
 
 echo "→ syncing to r2://$BUCKET"
 aws s3 sync "$BUILD/rolls" "s3://$BUCKET/rolls" --endpoint-url "$ENDPOINT" \
