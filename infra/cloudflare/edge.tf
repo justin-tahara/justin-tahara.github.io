@@ -24,6 +24,13 @@ resource "cloudflare_zone_setting" "this" {
   value      = each.value
 }
 
+# Smart Tiered Cache: cold-POP misses go via an upper tier near R2 instead
+# of hitting the origin from every region. Free; photos are big + 30d-cached.
+resource "cloudflare_tiered_cache" "this" {
+  zone_id = local.zone_id
+  value   = "on"
+}
+
 # --- Static asset caching ----------------------------------------------------
 # Cache fingerprint-less static assets at the edge for a day. HTML is left to
 # origin defaults so content edits go live immediately after a Pages deploy.
