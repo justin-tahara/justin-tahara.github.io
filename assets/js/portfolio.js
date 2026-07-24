@@ -201,14 +201,16 @@ function shotHTML(p, i, { line = null } = {}) {
     </button>`;
 }
 
-function renderGallery(active, heading, photos, { humans = false } = {}) {
+/* `title` is plain text (document.title, lightbox counter); `headingHTML`
+   optionally overrides the styled gallery heading. */
+function renderGallery(active, title, photos, { humans = false, headingHTML = null } = {}) {
   app.innerHTML = `
     <div class="page">
       ${sidebarHTML(active)}
       <div class="stage">
         ${topbarHTML(active)}
         <main class="stage-inner">
-          <div class="city-head"><h1>${heading}</h1></div>
+          <div class="city-head"><h1>${headingHTML || esc(title)}</h1></div>
           <div class="grid" id="grid">
             ${photos.map((p, i) => shotHTML(p, i, { line: humans ? p.place : null })).join('')}
           </div>
@@ -219,20 +221,22 @@ function renderGallery(active, heading, photos, { humans = false } = {}) {
   const grid = document.getElementById('grid');
   grid.addEventListener('click', (e) => {
     const b = e.target.closest('[data-shot]');
-    if (b) openLightbox(photos, Number(b.dataset.shot), heading, { humans, trigger: b });
+    if (b) openLightbox(photos, Number(b.dataset.shot), title, { humans, trigger: b });
   });
 
   afterRender();
 }
 
 function renderCity(slug) {
-  const photos = data.rolls[slug];
-  renderGallery(slug, esc(rollTitle(slug)), photos);
+  renderGallery(slug, rollTitle(slug), data.rolls[slug]);
   document.title = `${rollTitle(slug)} — Justin Tahara`;
 }
 
 function renderHumans() {
-  renderGallery('humans', 'Humans <span style="text-transform:none;letter-spacing:.02em;font-style:italic;">of the world</span>', humansPhotos(), { humans: true });
+  renderGallery('humans', 'Humans of the world', humansPhotos(), {
+    humans: true,
+    headingHTML: 'Humans <span style="text-transform:none;letter-spacing:.02em;font-style:italic;">of the world</span>',
+  });
   document.title = 'Humans of the world — Justin Tahara';
 }
 
@@ -345,7 +349,7 @@ function lbRender() {
   const p = photos[index];
 
   document.getElementById('lbCounter').textContent =
-    `${context.replace(/<[^>]*>/g, '')} · ${index + 1} / ${photos.length}`;
+    `${context} · ${index + 1} / ${photos.length}`;
 
   const caption = document.getElementById('lbCaption');
   if (humans && p.name) {
@@ -445,11 +449,22 @@ function renderRoute() {
 }
 
 function transitionTo(fn) {
-  if (reducedMotion.matches || !document.startViewTransition) {
+  if (reducedMotion.matches) {
     fn();
     return;
   }
-  document.startViewTransition(fn);
+  if (document.startViewTransition) {
+    document.startViewTransition(fn);
+    return;
+  }
+  // no View Transitions (e.g. Firefox): a quick manual cross-fade
+  app.classList.add('fade-out');
+  setTimeout(() => {
+    fn();
+    app.classList.remove('fade-out');
+    app.classList.add('fade-in');
+    setTimeout(() => app.classList.remove('fade-in'), 300);
+  }, 170);
 }
 
 function navigate(href) {

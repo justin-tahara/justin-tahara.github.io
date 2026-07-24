@@ -38,6 +38,10 @@ button { font: inherit; }
 
 :focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; }
 
+/* headings receive programmatic focus after route changes (screen-reader
+   anchor) — that focus should never paint a ring */
+h1[tabindex="-1"]:focus, h1[tabindex="-1"]:focus-visible { outline: none; }
+
 .visually-hidden {
   position: absolute;
   width: 1px; height: 1px;
