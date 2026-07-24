@@ -105,9 +105,19 @@ function imgAttrs(p, sizes, { eager = false } = {}) {
 
 /* ---------- data ---------- */
 
+/* On localhost, a gitignored /manifest.json at the repo root wins — lets
+   unpublished or still-cached rolls be previewed before they're live. */
+async function fetchManifest() {
+  if (location.hostname === 'localhost') {
+    const local = await fetch('/manifest.json').catch(() => null);
+    if (local && local.ok && (local.headers.get('content-type') || '').includes('json')) return local.json();
+  }
+  return fetch(MANIFEST_URL).then((r) => { if (!r.ok) throw new Error(r.status); return r.json(); });
+}
+
 async function loadData() {
   const [manifest, ratios] = await Promise.all([
-    fetch(MANIFEST_URL).then((r) => { if (!r.ok) throw new Error(r.status); return r.json(); }),
+    fetchManifest(),
     fetch(RATIOS_URL).then((r) => (r.ok ? r.json() : {})).catch(() => ({})),
   ]);
 
