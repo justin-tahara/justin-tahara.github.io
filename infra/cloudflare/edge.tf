@@ -85,5 +85,28 @@ resource "cloudflare_ruleset" "cache" {
         }
       }
     },
+    # manifest.json is the one mutable object on the photos host — the
+    # frontend's source of truth for what photos exist. The 30-day rule above
+    # was pinning it at the edge for a month despite its 5-minute origin
+    # max-age (observed: age 80644s), so freshly synced photos wouldn't
+    # appear without a manual purge. Listed last so it wins the conflict.
+    {
+      ref         = "cache_photos_manifest"
+      description = "Edge-cache manifest.json for 5 minutes only"
+      enabled     = true
+      action      = "set_cache_settings"
+      expression  = "(http.host eq \"images.${local.domain}\" and http.request.uri.path eq \"/manifest.json\")"
+
+      action_parameters = {
+        cache = true
+        edge_ttl = {
+          mode    = "override_origin"
+          default = 300
+        }
+        browser_ttl = {
+          mode = "respect_origin"
+        }
+      }
+    },
   ]
 }

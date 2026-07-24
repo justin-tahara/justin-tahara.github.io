@@ -28,8 +28,9 @@ jobs:
           # positives, excluded here just like in site-ci.
           args: >-
             --no-progress
+            --root-dir ${{ github.workspace }}
             --exclude 'mailto:' --exclude linkedin.com --exclude instagram.com
-            "index.html" "experience/**/*.html"
+            "index.html" "archive/index.html" "archive/experience/**/*.html"
           output: lychee-report.md
           fail: false
 

@@ -43,21 +43,23 @@ jobs:
 
       - name: www -> apex redirect preserves path
         run: |
-          loc=$(curl -sSI --max-time 30 "https://www.$HOST/resume/Justin_Tahara_2025_Resume.pdf" \
+          loc=$(curl -sSI --max-time 30 "https://www.$HOST/about" \
             | tr -d '\r' | awk 'tolower($1)=="location:"{print $2}')
           echo "location=$loc"
-          [ "$loc" = "https://$HOST/resume/Justin_Tahara_2025_Resume.pdf" ]
+          [ "$loc" = "https://$HOST/about" ]
 
-      - name: legacy URLs 301 to /experience/ (full redirect map)
+      - name: legacy URLs 301 into /archive/ (full redirect map)
         run: |
           declare -A map=(
-            [/Amazon.html]=/experience/amazon.html
-            [/AppliedIntuition.html]=/experience/applied-intuition.html
-            [/CHP.html]=/experience/chp.html
-            [/NIWC.html]=/experience/niwc.html
-            [/Onyx.html]=/experience/onyx.html
-            [/UCSD.html]=/experience/ucsd.html
-            [/WD.html]=/experience/wd.html
+            [/Amazon.html]=/archive/experience/amazon.html
+            [/AppliedIntuition.html]=/archive/experience/applied-intuition.html
+            [/CHP.html]=/archive/experience/chp.html
+            [/NIWC.html]=/archive/experience/niwc.html
+            [/Onyx.html]=/archive/experience/onyx.html
+            [/UCSD.html]=/archive/experience/ucsd.html
+            [/WD.html]=/archive/experience/wd.html
+            [/experience/amazon.html]=/archive/experience/amazon.html
+            [/resume/Justin_Tahara_2025_Resume.pdf]=/archive/resume/Justin_Tahara_2025_Resume.pdf
           )
           fail=0
           for from in "${!map[@]}"; do

@@ -50,6 +50,7 @@ for roll_dir in "$SRC"/*/; do
     stem="$(basename "${img%.*}")"
     ext="jpg" # variants are always JPEG; sips converts png sources
     orig_w="$(sips -g pixelWidth "$img" | awk '/pixelWidth/{print $2}')"
+    orig_h="$(sips -g pixelHeight "$img" | awk '/pixelHeight/{print $2}')"
 
     cp "$img" "$BUILD/rolls/$roll/$stem.${img##*.}"
 
@@ -62,7 +63,7 @@ for roll_dir in "$SRC"/*/; do
       fi
     done
 
-    manifest_rows+=("$roll|$stem|${img##*.}|$orig_w|${made[*]:-}")
+    manifest_rows+=("$roll|$stem|${img##*.}|$orig_w|$orig_h|${made[*]:-}")
     echo "✓ $roll/$stem (${orig_w}px; variants: ${made[*]:-none})"
   done
 done
@@ -72,9 +73,13 @@ shopt -u nullglob nocaseglob
 
 # manifest.json — the frontend contract:
 # { "titles": { "<roll>": "Display Name" },
-#   "rolls":  { "<roll>": [ { "stem", "original", "width",
+#   "rolls":  { "<roll>": [ { "stem", "original", "width", "height",
 #                             "variants": {"2560": url, ...},
 #                             "tags": [...], "place": "..." } ] } }
+# "width"/"height" are the original scan's pixel dimensions — the frontend
+# uses them for aspect-ratio so the masonry never shifts as images load
+# (assets/data/photo-ratios.json is the baked fallback for photos synced
+# before height existed).
 # Optional <photos-dir>/meta.json enriches it:
 #   { "titles": { "<roll>": "Display Name" },
 #     "tags":   { "<stem>": ["humans", ...] },
@@ -94,11 +99,12 @@ titles, tag_map = meta.get("titles", {}), meta.get("tags", {})
 places = meta.get("places", {})
 rolls = {}
 for line in sys.stdin:
-    roll, stem, ext, width, made = line.rstrip("\n").split("|")
+    roll, stem, ext, width, height, made = line.rstrip("\n").split("|")
     entry = {
         "stem": stem,
         "original": f"{base}/{roll}/{stem}.{ext}",
         "width": int(width),
+        "height": int(height),
         "variants": {w: f"{base}/{roll}/{stem}-w{w}.jpg" for w in made.split()},
     }
     if tag_map.get(stem):

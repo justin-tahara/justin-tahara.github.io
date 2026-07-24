@@ -45,20 +45,24 @@ catches external link rot — each alerts through a single self-closing issue.
 
 ```
 .
-├── index.html              # landing page (site root — must stay here)
+├── index.html              # photography portfolio SPA shell (site root — must stay here)
+├── 404.html                # byte-identical copy of index.html — GH Pages deep-link fallback
 ├── CNAME                   # custom domain (must stay at root)
 ├── assets/
-│   ├── css/styles.css      # shared styles
-│   ├── js/script.js        # shared scripts
-│   └── images/             # logos/, detail/, profile + standing photos
-├── experience/             # per-role detail pages (amazon, applied-intuition, …)
-├── papers/                 # academic / course PDFs
-├── resume/                 # resume PDF
+│   ├── css/portfolio.css   # "Classical" design system (film portfolio)
+│   ├── js/portfolio.js     # router + galleries + lightbox, driven by the R2 manifest
+│   └── data/photo-ratios.json  # baked aspect ratios (fallback until manifest carries height)
+├── archive/                # the previous resume site, kept whole at /archive/
 ├── scripts/                # photo publish pipeline (sync-photos.sh)
 ├── docs/                   # decision log
 ├── infra/cloudflare/       # Terraform: DNS, edge TLS/cache, headers, redirects, R2, analytics
 └── .github/workflows/      # CI/CD (see below)
 ```
+
+The portfolio renders every view (home index, per-city galleries, Humans of
+the world, About) client-side from
+[`images.justintahara.com/manifest.json`](https://images.justintahara.com/manifest.json),
+so publishing photos is just `scripts/sync-photos.sh` — no site deploy needed.
 
 ## Local preview
 

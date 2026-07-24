@@ -4,7 +4,7 @@
       "staticDistDir": ".",
       "url": [
         "http://localhost/index.html",
-        "http://localhost/experience/amazon.html"
+        "http://localhost/archive/index.html"
       ],
       "numberOfRuns": 1
     },
