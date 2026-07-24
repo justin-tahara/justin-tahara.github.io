@@ -315,16 +315,15 @@ function renderAbout() {
             <h1>About</h1>
             <div class="about-sub">photographs on film, since 2019</div>
             ${portraitHTML}
-            <p>I'm Justin — software engineer by day, film camera in my pocket the
-            rest of the time. I picked up a point-and-shoot in 2019 and never really
-            put it down.</p>
-            <p>These photos come from wherever life's taken me: the Bay Area (home),
-            trips up and down California, and travels through Japan, Taiwan, Hawaii,
-            Canada, and Europe.</p>
-            <p>Everything here is scanned straight off the negative — missed focus,
-            weird colors, and all. That's the fun of film.</p>
-            <p>If you want a print of anything, or just want to talk cameras,
-            <a href="${CONTACT.email}">email me</a>.</p>
+            <p>I'm Justin. I'm an infrastructure engineer, and I like shooting film —
+            this site is what happened when those two things collided. If you're
+            curious how it works under the hood, it's all on my
+            <a href="${CONTACT.github}">GitHub</a>.</p>
+            <p>Everything here was shot on 35mm in places I've lived and traveled,
+            and scanned straight off the negative.</p>
+            <p>Barcelona, Borussia Dortmund, and the Dodgers are my teams. That
+            should explain all the stadiums.</p>
+            <p>Want a print of something? <a href="${CONTACT.email}">Email me</a>.</p>
             <div class="rule"></div>
             <nav class="elsewhere" aria-label="Elsewhere">
               <a href="${CONTACT.instagram}" rel="me">Instagram</a><span class="dot">·</span><a href="${CONTACT.email}">Email</a><span class="dot">·</span><a href="${CONTACT.github}">GitHub</a><span class="dot">·</span><a href="${CONTACT.linkedin}">LinkedIn</a>
