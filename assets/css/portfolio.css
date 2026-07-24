@@ -453,10 +453,10 @@ a.home-name-link { text-decoration: none; }
   max-height: calc(100vh - 210px);
   width: auto;
   height: auto;
-  opacity: 0;
-  transition: opacity .22s ease;
+  /* the grid's cached w800 paints here instantly while the full-size loads */
+  background-size: cover;
+  background-position: center;
 }
-.lb-mat img.is-loaded { opacity: 1; }
 
 .lb-bottom {
   display: flex;

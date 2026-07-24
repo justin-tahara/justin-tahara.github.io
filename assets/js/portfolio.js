@@ -400,10 +400,36 @@ const lbState = { photos: [], index: 0, context: '', humans: false, trigger: nul
 
 function lbPhotoEl() { return document.getElementById('lbPhoto'); }
 
+/* The variant the grid most likely loaded (mirrors the grid's sizes attr),
+   so the lightbox underlay paints from cache instead of refetching w800. */
+function gridVariant(p) {
+  const frac = bpNarrow.matches ? 0.92 : bpMid.matches ? 0.45 : 0.3;
+  const target = frac * window.innerWidth * (window.devicePixelRatio || 1);
+  const s = sources(p);
+  return (s.find(([w]) => w >= target) || s[s.length - 1])[1];
+}
+
+/* Real rendered CSS width of the mat-constrained photo — sizes="100vw"
+   made the browser fetch far larger variants than it displayed. */
+function lbSizes(p) {
+  const narrow = bpNarrow.matches;
+  const maxW = window.innerWidth - (narrow ? 44 : 130);
+  const maxH = window.innerHeight - (narrow ? 168 : 210);
+  const r = photoRatio(p);
+  const w = r ? Math.min(maxW, maxH * (r[0] / r[1])) : maxW;
+  return `${Math.max(1, Math.round(w))}px`;
+}
+
+/* Warm the exact candidate the <img> will select (same srcset + sizes).
+   The Map keeps refs — an unreferenced Image can be GC'd mid-fetch. */
+const preloaded = new Map();
 function preload(p) {
-  if (!p) return;
+  if (!p || preloaded.has(p.stem)) return;
   const img = new Image();
-  img.src = mainSrc(p);
+  img.sizes = lbSizes(p);
+  img.srcset = srcset(p);
+  preloaded.set(p.stem, img);
+  if (preloaded.size > 24) preloaded.delete(preloaded.keys().next().value);
 }
 
 function lbRender() {
@@ -420,15 +446,19 @@ function lbRender() {
     caption.textContent = p.place || '';
   }
 
-  const img = lbPhotoEl();
-  img.classList.remove('is-loaded');
+  // Fresh <img> per photo (a reused one keeps showing the previous frame);
+  // the cached w800 paints as background while the full size streams in.
+  const old = lbPhotoEl();
+  const img = document.createElement('img');
+  img.id = 'lbPhoto';
   const r = photoRatio(p);
   if (r) { img.width = r[0]; img.height = r[1]; }
   img.alt = p.place || 'Film photograph';
-  img.sizes = '100vw';
+  img.decoding = 'async';
+  img.style.backgroundImage = `url("${gridVariant(p)}")`;
+  img.sizes = lbSizes(p);
   img.srcset = srcset(p);
-  img.src = mainSrc(p);
-  if (img.complete && img.naturalWidth) img.classList.add('is-loaded');
+  old.replaceWith(img);
 
   preload(photos[(index + 1) % photos.length]);
   preload(photos[(index - 1 + photos.length) % photos.length]);
@@ -463,9 +493,6 @@ function initLightbox() {
   lb.addEventListener('click', (e) => {
     if (e.target === lb || e.target.classList.contains('lb-stagewrap')) closeLightbox();
   });
-
-  const img = lbPhotoEl();
-  img.addEventListener('load', () => img.classList.add('is-loaded'));
 
   document.addEventListener('keydown', (e) => {
     if (!lbState.open) return;
