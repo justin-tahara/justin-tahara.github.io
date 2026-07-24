@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Justin Tahara — photographs on film</title>
+<meta name="description" content="Film photography by Justin Tahara — city galleries from San Francisco to Tokyo, portraits from around the world. Shot on film since 2019.">
+<meta property="og:title" content="Justin Tahara — photographs on film">
+<meta property="og:description" content="Film photography by Justin Tahara — city galleries from San Francisco to Tokyo, portraits from around the world.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://justintahara.com/">
+<meta property="og:image" content="https://images.justintahara.com/rolls/san-francisco/000004150017-w1600.jpg">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ctext y='53%25' x='50%25' dominant-baseline='middle' text-anchor='middle' font-family='Georgia,serif' font-size='34' fill='%238a6516'%3EJT%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://images.justintahara.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Lora:ital,wght@0,400;1,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/css/portfolio.css">
+<!-- NOTE: 404.html must stay a byte-identical copy of this file (cp index.html 404.html).
+     It is how GitHub Pages serves the app for deep links like /city/tokyo-kanto.
+     site-ci enforces the copy with a diff check. -->
+</head>
+<body>
+
+  <div id="app">
+    <noscript>
+      <div class="home">
+        <div class="home-name">Justin Tahara</div>
+        <div class="tagline">photographs on film</div>
+        <p class="status-note">This portfolio needs JavaScript to load the galleries.
+        In the meantime: <a href="https://www.instagram.com/justintahara/" rel="me">Instagram</a> ·
+        <a href="mailto:justintahara@gmail.com">Email</a> ·
+        <a href="/archive/">previous site</a></p>
+      </div>
+    </noscript>
+  </div>
+
+  <div class="lightbox" id="lightbox" role="dialog" aria-modal="true" aria-label="Photo viewer">
+    <div class="lb-top">
+      <div class="lb-counter" id="lbCounter"></div>
+      <button type="button" class="lb-btn close" id="lbClose">Close</button>
+    </div>
+    <div class="lb-stagewrap">
+      <div class="lb-mat"><img id="lbPhoto" src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==" alt=""></div>
+    </div>
+    <div class="lb-bottom">
+      <button type="button" class="lb-btn" id="lbPrev">‹ Prev</button>
+      <span class="lb-caption" id="lbCaption"></span>
+      <button type="button" class="lb-btn" id="lbNext">Next ›</button>
+    </div>
+  </div>
+
+  <script type="module" src="/assets/js/portfolio.js"></script>
+</body>
+</html>

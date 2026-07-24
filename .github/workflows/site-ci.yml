@@ -32,10 +32,12 @@ jobs:
         with:
           # Internal links are the real restructure risk; social/auth-walled
           # hosts answer bots with 403/999, so exclude them to avoid flakiness.
+          # --root-dir resolves the portfolio's root-relative links (/assets/…).
           args: >-
             --no-progress
+            --root-dir ${{ github.workspace }}
             --exclude 'mailto:' --exclude linkedin.com --exclude instagram.com
-            "index.html" "experience/**/*.html"
+            "index.html" "archive/index.html" "archive/experience/**/*.html"
           fail: true
 
   html:
@@ -47,7 +49,17 @@ jobs:
         with:
           node-version: "20"
       - name: html-validate
-        run: npx --yes html-validate@9 index.html "experience/**/*.html"
+        run: npx --yes html-validate@9 index.html 404.html archive/index.html "archive/experience/**/*.html"
+
+  spa-fallback:
+    name: 404 fallback in sync
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      # GitHub Pages serves 404.html for deep links (/city/…); the portfolio
+      # relies on it being a byte-identical copy of index.html.
+      - name: 404.html matches index.html
+        run: diff index.html 404.html
 
   lighthouse:
     name: lighthouse
