@@ -51,6 +51,10 @@ const ROLL_OVERRIDES = {
 /* Pulled out of its roll entirely; rendered as the About page portrait. */
 const ABOUT_PORTRAIT = 'san-diego/IMG_2801';
 
+/* Rolls with their own section: kept out of the city list and home grid,
+   linked from the colophon between Humans and About at /<slug>. */
+const SPECIAL_ROLLS = ['jasmine'];
+
 /* Sidebar order: US west to east, then Japan / Asia, then Europe.
    Rolls added to the manifest later are appended alphabetically. */
 const NAV_ORDER = [
@@ -101,9 +105,19 @@ function imgAttrs(p, sizes, { eager = false } = {}) {
 
 /* ---------- data ---------- */
 
+/* On localhost, a gitignored /manifest.json at the repo root wins — lets
+   unpublished or still-cached rolls be previewed before they're live. */
+async function fetchManifest() {
+  if (location.hostname === 'localhost') {
+    const local = await fetch('/manifest.json').catch(() => null);
+    if (local && local.ok && (local.headers.get('content-type') || '').includes('json')) return local.json();
+  }
+  return fetch(MANIFEST_URL).then((r) => { if (!r.ok) throw new Error(r.status); return r.json(); });
+}
+
 async function loadData() {
   const [manifest, ratios] = await Promise.all([
-    fetch(MANIFEST_URL).then((r) => { if (!r.ok) throw new Error(r.status); return r.json(); }),
+    fetchManifest(),
     fetch(RATIOS_URL).then((r) => (r.ok ? r.json() : {})).catch(() => ({})),
   ]);
 
@@ -120,7 +134,7 @@ async function loadData() {
     }
   }
 
-  const slugs = Object.keys(rolls);
+  const slugs = Object.keys(rolls).filter((s) => !SPECIAL_ROLLS.includes(s));
   const order = NAV_ORDER.filter((s) => slugs.includes(s))
     .concat(slugs.filter((s) => !NAV_ORDER.includes(s))
       .sort((a, b) => (manifest.titles[a] || a).localeCompare(manifest.titles[b] || b)));
@@ -147,10 +161,13 @@ function coverPhoto(photos, curatedStem) {
 function navListHTML(active) {
   const cities = data.order.map((slug) =>
     `<a href="/city/${esc(slug)}" data-nav${slug === active ? ' class="is-active" aria-current="page"' : ''}>${esc(rollTitle(slug))}</a>`).join('');
+  const specials = SPECIAL_ROLLS.filter((s) => data.rolls[s]).map((s) =>
+    `<a href="/${esc(s)}" data-nav class="about-link${s === active ? ' is-active' : ''}"${s === active ? ' aria-current="page"' : ''}>${esc(rollTitle(s))}</a>`).join('');
   return `
     <nav class="cities" aria-label="Galleries">${cities}</nav>
     <div class="rule rule-mid"></div>
     <a href="/humans" data-nav class="section-link${active === 'humans' ? ' is-active' : ''}"${active === 'humans' ? ' aria-current="page"' : ''}>Humans <span class="of">of the world</span></a>
+    ${specials}
     <a href="/about" data-nav class="about-link${active === 'about' ? ' is-active' : ''}"${active === 'about' ? ' aria-current="page"' : ''}>About</a>`;
 }
 
@@ -530,8 +547,15 @@ function renderRoute() {
   if (path === '/about') return renderAbout();
   if (path === '/humans') return renderHumans();
 
+  const special = SPECIAL_ROLLS.find((s) => path === `/${s}` && data.rolls[s]);
+  if (special) {
+    renderGallery(special, rollTitle(special), data.rolls[special]);
+    document.title = `${rollTitle(special)} — Justin Tahara`;
+    return;
+  }
+
   const city = path.match(/^\/city\/([a-z0-9-]+)$/);
-  if (city && data.rolls[city[1]]) return renderCity(city[1]);
+  if (city && data.rolls[city[1]] && !SPECIAL_ROLLS.includes(city[1])) return renderCity(city[1]);
 
   // unknown path — the front door is the index
   history.replaceState(null, '', '/');
