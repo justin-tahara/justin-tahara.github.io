@@ -150,10 +150,9 @@ a.wordmark-link { text-decoration: none; }
   text-transform: uppercase;
 }
 
-/* ---------- masonry (CSS columns, 10px gutter) ---------- */
-.grid { column-count: 3; column-gap: 10px; }
-@media (max-width: 900px) { .grid { column-count: 2; } }
-@media (max-width: 560px) { .grid { column-count: 1; } }
+/* ---------- masonry (JS shortest-column distribution, 10px gutter) ---------- */
+.grid { display: flex; gap: 10px; align-items: flex-start; }
+.grid-col { flex: 1 1 0; min-width: 0; }
 
 .shot {
   display: block;
@@ -163,18 +162,17 @@ a.wordmark-link { text-decoration: none; }
   border: 0;
   background: none;
   cursor: pointer;
-  break-inside: avoid;
-  transition: box-shadow .3s ease;
 }
-.shot:hover { box-shadow: 0 10px 26px rgba(32, 31, 29, .18); }
 .shot img {
   width: 100%;
   height: auto;
   outline: 1px solid var(--hair);
   background: rgba(32, 31, 29, .05); /* quiet plate while the scan loads */
   opacity: 0;
-  transition: opacity .5s ease;
+  transition: opacity .5s ease, box-shadow .3s ease;
 }
+/* shadow lifts the photo only — never the caption line below it */
+.shot:hover img { box-shadow: 0 10px 26px rgba(32, 31, 29, .18); }
 .shot img.is-loaded { opacity: 1; }
 
 /* scroll-reveal: tiles fade + rise as they enter the viewport */
@@ -297,16 +295,37 @@ a.home-name-link { text-decoration: none; }
   text-align: justify;
   margin: 0 0 18px;
 }
-.about-col .rule { margin: 26px 0 22px; }
-.elsewhere { font-family: var(--font-head); font-size: 17px; line-height: 2; }
+.about-col .rule { margin: 26px 0 22px; clear: both; }
+.about-col p a { color: var(--gold-deep); text-decoration: none; }
+.about-col p a:hover { color: var(--ink); }
+.elsewhere { font-family: var(--font-head); font-size: 18px; }
 .elsewhere a { text-decoration: none; color: var(--gold-deep); }
 .elsewhere a:hover { color: var(--ink); }
-.elsewhere .what {
+.elsewhere .dot { color: var(--faint); padding: 0 8px; }
+
+/* the one matted portrait plate */
+.about-portrait {
+  float: right;
+  width: 280px;
+  margin: 4px 0 16px 26px;
+}
+.about-portrait img {
+  width: 100%;
+  height: auto;
+  padding: 8px;
+  background: #fdfcf9;
+  outline: 1px solid var(--hair);
+}
+.about-portrait figcaption {
   font-family: var(--font-body);
   font-style: italic;
   font-size: 12.5px;
   color: var(--muted);
-  margin-left: 10px;
+  margin-top: 7px;
+  text-align: center;
+}
+@media (max-width: 700px) {
+  .about-portrait { float: none; width: 100%; max-width: 320px; margin: 0 0 20px; }
 }
 
 /* ---------- status (loading / error) ---------- */

@@ -17,8 +17,39 @@ const RATIOS_URL = '/assets/data/photo-ratios.json';
 const CONTACT = {
   instagram: 'https://www.instagram.com/justintahara/',
   github: 'https://github.com/justin-tahara',
+  linkedin: 'https://www.linkedin.com/in/justintahara/',
   email: 'mailto:justintahara@gmail.com',
 };
+
+/* Curated hero shot per roll (stem). Change a stem here to change a cover;
+   anything unlisted falls back to the roll's first landscape frame. */
+const COVERS = {
+  'san-francisco': '000094330016',            // Golden Gate from the headlands
+  'norcal-coast': '8027961_8027961-R1-010-3A', // McWay Falls, Big Sur
+  'tahoe': '000004160013',                    // Emerald Bay
+  'los-angeles': '35A_0407',                  // downtown skyline
+  'san-diego': '_16_0163_Original',           // Scripps pier
+  'hawaii': '000058140030',                   // sunset over the water
+  'vancouver-banff': '000028060014',          // Banff Springs below the peak
+  'chicago': '000058130009',                  // Wrigley Field marquee
+  'boston': '000094320002',                   // downtown, golden hour
+  'new-york': 'NY-FILM-06',                   // lower Manhattan from the water
+  'tokyo-kanto': '000008950016',              // temple under the green mountain
+  'kyoto-nara': '1962949_1962949-R5-062-29A', // Byōdō-in reflected
+  'nagano': '000008930017',                   // trains at the platform
+  'taiwan': '7838965_7838965-R3-039-18',      // Jiufen teahouse
+  'europe': '8510935_8510935-R4-036-16A',     // Salzburg from above
+};
+const HUMANS_COVER = 'tokyo-kanto/000008950028'; // the two gentlemen, Tokyo
+
+/* Photos filed under the wrong roll in R2 — reassigned client-side until the
+   next full re-sync moves the objects. Key: "roll/stem" -> correct roll. */
+const ROLL_OVERRIDES = {
+  'san-francisco/000004160034': 'los-angeles', // Dodger Stadium
+};
+
+/* Pulled out of its roll entirely; rendered as the About page portrait. */
+const ABOUT_PORTRAIT = 'san-diego/IMG_2801';
 
 /* Sidebar order: US west to east, then Japan / Asia, then Europe.
    Rolls added to the manifest later are appended alphabetically. */
@@ -76,19 +107,25 @@ async function loadData() {
     fetch(RATIOS_URL).then((r) => (r.ok ? r.json() : {})).catch(() => ({})),
   ]);
 
-  const slugs = Object.keys(manifest.rolls);
+  const rolls = {};
+  let aboutPortrait = null;
+  for (const [slug, photos] of Object.entries(manifest.rolls)) {
+    for (const p of photos) {
+      const key = `${slug}/${p.stem}`;
+      p._baked = ratios[key] || null;
+      if (key === ABOUT_PORTRAIT) { p._roll = slug; aboutPortrait = p; continue; }
+      const target = ROLL_OVERRIDES[key] || slug;
+      p._roll = target;
+      (rolls[target] = rolls[target] || []).push(p);
+    }
+  }
+
+  const slugs = Object.keys(rolls);
   const order = NAV_ORDER.filter((s) => slugs.includes(s))
     .concat(slugs.filter((s) => !NAV_ORDER.includes(s))
       .sort((a, b) => (manifest.titles[a] || a).localeCompare(manifest.titles[b] || b)));
 
-  for (const slug of slugs) {
-    for (const p of manifest.rolls[slug]) {
-      p._roll = slug;
-      p._baked = ratios[`${slug}/${p.stem}`] || null;
-    }
-  }
-
-  data = { rolls: manifest.rolls, titles: manifest.titles, order };
+  data = { rolls, titles: manifest.titles, order, aboutPortrait };
 }
 
 const rollTitle = (slug) => (data.titles[slug] || slug);
@@ -98,9 +135,11 @@ function humansPhotos() {
     data.rolls[slug].filter((p) => (p.tags || []).includes('humans')));
 }
 
-/* Cover for a roll: first landscape frame (they crop to 3:2 best), else first. */
-function coverPhoto(photos) {
-  return photos.find((p) => { const r = photoRatio(p); return r && r[0] > r[1]; }) || photos[0];
+/* Cover for a roll: the curated pick, else first landscape frame, else first. */
+function coverPhoto(photos, curatedStem) {
+  return (curatedStem && photos.find((p) => p.stem === curatedStem))
+    || photos.find((p) => { const r = photoRatio(p); return r && r[0] > r[1]; })
+    || photos[0];
 }
 
 /* ---------- shared chrome ---------- */
@@ -153,7 +192,7 @@ function topbarHTML(active) {
 
 function renderHome() {
   const cells = data.order.map((slug) => {
-    const cover = coverPhoto(data.rolls[slug]);
+    const cover = coverPhoto(data.rolls[slug], COVERS[slug]);
     return `
       <a class="cover will-reveal" href="/city/${esc(slug)}" data-nav>
         <div class="cover-img"><img ${imgAttrs(cover, '(max-width: 480px) 92vw, (max-width: 800px) 46vw, (max-width: 1100px) 31vw, 24vw')} alt="${esc(rollTitle(slug))} — film photographs"></div>
@@ -163,9 +202,10 @@ function renderHome() {
 
   const humans = humansPhotos();
   if (humans.length) {
+    const cover = humans.find((p) => `${p._roll}/${p.stem}` === HUMANS_COVER) || coverPhoto(humans);
     cells.push(`
       <a class="cover will-reveal" href="/humans" data-nav>
-        <div class="cover-img"><img ${imgAttrs(coverPhoto(humans), '(max-width: 480px) 92vw, (max-width: 800px) 46vw, (max-width: 1100px) 31vw, 24vw')} alt="Humans of the world — film portraits"></div>
+        <div class="cover-img"><img ${imgAttrs(cover, '(max-width: 480px) 92vw, (max-width: 800px) 46vw, (max-width: 1100px) 31vw, 24vw')} alt="Humans of the world — film portraits"></div>
         <div class="cover-name">Humans <span class="of">of the world</span></div>
       </a>`);
   }
@@ -201,6 +241,25 @@ function shotHTML(p, i, { line = null } = {}) {
     </button>`;
 }
 
+/* Masonry: distribute photos into the shortest column by known aspect ratio.
+   Beats CSS columns, whose balancing strands photos on sparse rolls, and
+   keeps reading order roughly left-to-right. */
+const bpNarrow = window.matchMedia('(max-width: 560px)');
+const bpMid = window.matchMedia('(max-width: 900px)');
+
+function gridHTML(photos, { humans = false } = {}) {
+  const n = bpNarrow.matches ? 1 : bpMid.matches ? 2 : 3;
+  const cols = Array.from({ length: n }, () => ({ h: 0, html: [] }));
+  photos.forEach((p, i) => {
+    const r = photoRatio(p);
+    const ar = r ? r[1] / r[0] : 0.75; // photo height in column-width units
+    const col = cols.reduce((best, c) => (c.h < best.h ? c : best));
+    col.html.push(shotHTML(p, i, { line: humans ? p.place : null }));
+    col.h += ar + (humans ? 0.14 : 0.04); // + caption line / gutter
+  });
+  return cols.map((c) => `<div class="grid-col">${c.html.join('')}</div>`).join('');
+}
+
 /* `title` is plain text (document.title, lightbox counter); `headingHTML`
    optionally overrides the styled gallery heading. */
 function renderGallery(active, title, photos, { humans = false, headingHTML = null } = {}) {
@@ -211,9 +270,7 @@ function renderGallery(active, title, photos, { humans = false, headingHTML = nu
         ${topbarHTML(active)}
         <main class="stage-inner">
           <div class="city-head"><h1>${headingHTML || esc(title)}</h1></div>
-          <div class="grid" id="grid">
-            ${photos.map((p, i) => shotHTML(p, i, { line: humans ? p.place : null })).join('')}
-          </div>
+          <div class="grid" id="grid">${gridHTML(photos, { humans })}</div>
         </main>
       </div>
     </div>`;
@@ -241,6 +298,13 @@ function renderHumans() {
 }
 
 function renderAbout() {
+  const portrait = data.aboutPortrait;
+  const portraitHTML = portrait ? `
+    <figure class="about-portrait">
+      <img ${imgAttrs(portrait, '(max-width: 700px) 92vw, 280px', { eager: true })} alt="Justin, mid-bite at a restaurant">
+      <figcaption>${esc(portrait.place || '')}, mid-bite</figcaption>
+    </figure>` : '';
+
   app.innerHTML = `
     <div class="page">
       ${sidebarHTML('about')}
@@ -250,21 +314,20 @@ function renderAbout() {
           <div class="about-col">
             <h1>About</h1>
             <div class="about-sub">photographs on film, since 2019</div>
-            <p>I shoot film — mostly 35mm, mostly while walking. The photographs here
-            were made in the places I've lived and the places I've been lucky to wander:
-            up and down the California coast, across the States, and through Japan,
-            Taiwan, and Europe.</p>
-            <p>Everything on this site is scanned from the negative and left largely
-            alone. The grain, the missed exposures, the colors that aren't quite
-            true — that's the point.</p>
-            <p>By day I'm a software engineer. Prints of any photograph are available —
-            write me.</p>
+            ${portraitHTML}
+            <p>I'm Justin — software engineer by day, film camera in my pocket the
+            rest of the time. I picked up a point-and-shoot in 2019 and never really
+            put it down.</p>
+            <p>These photos come from wherever life's taken me: the Bay Area (home),
+            trips up and down California, and travels through Japan, Taiwan, Hawaii,
+            Canada, and Europe.</p>
+            <p>Everything here is scanned straight off the negative — missed focus,
+            weird colors, and all. That's the fun of film.</p>
+            <p>If you want a print of anything, or just want to talk cameras,
+            <a href="${CONTACT.email}">email me</a>.</p>
             <div class="rule"></div>
             <nav class="elsewhere" aria-label="Elsewhere">
-              <a href="${CONTACT.instagram}" rel="me">Instagram</a><span class="what">most new work lands here first</span><br>
-              <a href="${CONTACT.email}">Email</a><span class="what">prints, questions, anything</span><br>
-              <a href="${CONTACT.github}">GitHub</a><span class="what">the software side</span><br>
-              <a href="/archive/">Résumé site</a><span class="what">the previous version of this site</span>
+              <a href="${CONTACT.instagram}" rel="me">Instagram</a><span class="dot">·</span><a href="${CONTACT.email}">Email</a><span class="dot">·</span><a href="${CONTACT.github}">GitHub</a><span class="dot">·</span><a href="${CONTACT.linkedin}">LinkedIn</a>
             </nav>
           </div>
         </main>
@@ -385,6 +448,7 @@ function closeLightbox() {
   lb.classList.remove('open');
   document.body.classList.remove('lb-open');
   if (lbState.trigger && document.contains(lbState.trigger)) lbState.trigger.focus();
+  lb.dispatchEvent(new CustomEvent('lb:closed'));
 }
 
 function lbStep(delta) {
@@ -485,6 +549,19 @@ function initRouter() {
   });
 
   window.addEventListener('popstate', () => transitionTo(renderRoute));
+
+  // masonry column count is baked into the DOM — rebuild when a breakpoint
+  // flips (deferred while the lightbox is up, e.g. a phone rotation)
+  let pendingRelayout = false;
+  const onBreakpoint = () => {
+    if (!document.getElementById('grid')) return;
+    if (lbState.open) { pendingRelayout = true; return; }
+    renderRoute();
+  };
+  [bpNarrow, bpMid].forEach((q) => q.addEventListener('change', onBreakpoint));
+  lb.addEventListener('lb:closed', () => {
+    if (pendingRelayout) { pendingRelayout = false; onBreakpoint(); }
+  });
 }
 
 /* ---------- boot ---------- */
