@@ -3,14 +3,15 @@
 
 locals {
   # Content-Security-Policy tailored to what the site actually loads:
-  #   - scripts: the local script.js (no inline <script> -> no 'unsafe-inline')
-  #              + the Web Analytics beacon the edge auto-injects
-  #              (observability.tf); its posts go to cloudflareinsights.com
-  #   - styles:  Google Fonts stylesheet + one inline style= attr (UCSD page)
+  #   - scripts: the local portfolio.js (no inline <script> -> no 'unsafe-inline')
+  #              + the Web Analytics beacon snippet; its posts go to
+  #              cloudflareinsights.com
+  #   - styles:  Google Fonts stylesheet + one inline style= attr
+  #              (the Humans heading in portfolio.js)
   #   - fonts:   Google Fonts (fonts.gstatic.com)
   #   - images:  self + the inline data: favicon + the R2 photos host (photos.tf)
-  #   - connect: self + the photos host (the photography page fetch()es its
-  #              manifest.json and 3D assets from images.justintahara.com)
+  #   - connect: self + the photos host (the app fetch()es manifest.json from
+  #              images.justintahara.com)
   # Tighten further by removing the one inline style= attr, which lets us drop
   # 'unsafe-inline' from style-src entirely.
   csp = join("; ", [
@@ -44,10 +45,11 @@ resource "cloudflare_ruleset" "security_headers" {
 
       action_parameters = {
         headers = {
-          "Strict-Transport-Security"  = { operation = "set", value = "max-age=31536000; includeSubDomains; preload" }
-          "Content-Security-Policy"    = { operation = "set", value = local.csp }
-          "X-Content-Type-Options"     = { operation = "set", value = "nosniff" }
-          "X-Frame-Options"            = { operation = "set", value = "SAMEORIGIN" }
+          "Strict-Transport-Security" = { operation = "set", value = "max-age=31536000; includeSubDomains; preload" }
+          "Content-Security-Policy"   = { operation = "set", value = local.csp }
+          "X-Content-Type-Options"    = { operation = "set", value = "nosniff" }
+          # kept in lockstep with the CSP's frame-ancestors 'none'
+          "X-Frame-Options"            = { operation = "set", value = "DENY" }
           "Referrer-Policy"            = { operation = "set", value = "strict-origin-when-cross-origin" }
           "Cross-Origin-Opener-Policy" = { operation = "set", value = "same-origin" }
           "Permissions-Policy"         = { operation = "set", value = "geolocation=(), camera=(), microphone=(), browsing-topics=()" }
