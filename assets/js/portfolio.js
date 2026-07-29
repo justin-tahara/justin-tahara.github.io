@@ -65,6 +65,73 @@ const NAV_ORDER = [
 
 const app = document.getElementById('app');
 const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+const systemDark = window.matchMedia('(prefers-color-scheme: dark)');
+
+/* ---------- theme: the film-speed dial ----------
+   ISO 100 is daylight, ISO 3200 is pushed for night. CSS lights system-dark
+   visitors on its own; this only carries the visitor's explicit dial choice. */
+
+function currentTheme() {
+  return document.documentElement.dataset.theme
+    || (systemDark.matches ? 'dark' : 'light');
+}
+
+function applyTheme(t) {
+  document.documentElement.dataset.theme = t;
+  document.querySelectorAll('meta[name="theme-color"]').forEach((m) =>
+    m.setAttribute('content', t === 'dark' ? '#191510' : '#f4f1ec'));
+}
+
+let storedTheme = null;
+try { storedTheme = localStorage.getItem('theme'); } catch { /* private mode */ }
+if (storedTheme === 'dark' || storedTheme === 'light') applyTheme(storedTheme);
+
+/* Seven-segment digits in the date-stamp mark's own geometry (cell 20x34). */
+const SEG_SHAPES = {
+  a: (x) => `${x + 1},4 ${x + 19},4 ${x + 16},7 ${x + 4},7`,
+  b: (x) => `${x + 20},5 ${x + 20},20 ${x + 17},17.5 ${x + 17},8`,
+  c: (x) => `${x + 20},22 ${x + 20},37 ${x + 17},34 ${x + 17},25`,
+  d: (x) => `${x + 19},38 ${x + 1},38 ${x + 4},35 ${x + 16},35`,
+  e: (x) => `${x},37 ${x},22 ${x + 3},25 ${x + 3},34`,
+  f: (x) => `${x},20 ${x},5 ${x + 3},8 ${x + 3},17.5`,
+  g: (x) => `${x + 2},21 ${x + 5},19.6 ${x + 15},19.6 ${x + 18},21 ${x + 15},22.4 ${x + 5},22.4`,
+};
+const SEG_DIGITS = { 0: 'abcdef', 1: 'bc', 2: 'abged', 3: 'abgcd' };
+
+function segDigitsSVG(num) {
+  const cells = [...String(num)];
+  const polys = cells.map((ch, i) =>
+    [...SEG_DIGITS[ch]].map((s) => `<polygon points="${SEG_SHAPES[s](4 + i * 26)}"/>`).join('')).join('');
+  return `<svg viewBox="0 0 ${cells.length * 26 - 1} 42" aria-hidden="true"><g transform="skewX(-7)" fill="currentColor">${polys}</g></svg>`;
+}
+
+function isoToggleHTML() {
+  const dark = currentTheme() === 'dark';
+  return `<button type="button" class="iso-toggle" data-iso aria-pressed="${dark}"
+    aria-label="${dark ? 'Switch to day theme (ISO 100)' : 'Switch to night theme (ISO 3200)'}"
+    title="film speed — ${dark ? 'back to daylight' : 'push to night'}">ISO ${segDigitsSVG(dark ? 3200 : 100)}</button>`;
+}
+
+function refreshDials() {
+  document.querySelectorAll('[data-iso]').forEach((el) => { el.outerHTML = isoToggleHTML(); });
+}
+
+document.addEventListener('click', (e) => {
+  const dial = e.target.closest('[data-iso]');
+  if (!dial) return;
+  const idx = [...document.querySelectorAll('[data-iso]')].indexOf(dial);
+  const next = currentTheme() === 'dark' ? 'light' : 'dark';
+  applyTheme(next);
+  try { localStorage.setItem('theme', next); } catch { /* private mode */ }
+  refreshDials();
+  const again = document.querySelectorAll('[data-iso]')[idx];
+  if (again) again.focus();
+});
+
+/* keep the dial honest if the OS flips while no explicit choice is set */
+systemDark.addEventListener('change', () => {
+  if (!document.documentElement.dataset.theme) refreshDials();
+});
 
 let data = null; // { rolls: {slug: [photo]}, titles: {slug: name}, order: [slug] }
 
@@ -185,6 +252,7 @@ function sidebarHTML(active) {
       <div class="rule rule-top"></div>
       ${navListHTML(active)}
       <div class="spacer"></div>
+      ${isoToggleHTML()}
       ${contactHTML()}
     </aside>`;
 }
@@ -201,6 +269,7 @@ function topbarHTML(active) {
         <button type="button" class="menu-btn" id="menuClose">Close</button>
       </div>
       ${navListHTML(active)}
+      ${isoToggleHTML()}
       ${contactHTML()}
     </div>`;
 }
@@ -235,7 +304,7 @@ function renderHome() {
           <div class="tagline">photographs on film</div>
         </div>
         <nav class="home-menu" aria-label="Site">
-          <a href="/about" data-nav>About</a><span class="dot">·</span><a href="${CONTACT.instagram}" rel="me">Instagram</a><span class="dot">·</span><a href="${CONTACT.email}">Email</a>
+          <a href="/about" data-nav>About</a><span class="dot">·</span><a href="${CONTACT.instagram}" rel="me">Instagram</a><span class="dot">·</span><a href="${CONTACT.email}">Email</a><span class="dot">·</span>${isoToggleHTML()}
         </nav>
       </header>
       <main>
@@ -466,6 +535,8 @@ function lbRender() {
     caption.textContent = p.place || '';
   }
 
+  lbZoomOff();
+
   // Fresh <img> per photo (a reused one keeps showing the previous frame);
   // the cached w800 paints as background while the full size streams in.
   const old = lbPhotoEl();
@@ -506,7 +577,70 @@ function lbStep(delta) {
   lbRender();
 }
 
+/* ---------- loupe: a viewfinder lens rides with the cursor ----------
+   A framed box floats over the photo showing the region under the cursor
+   at ZOOM x, fed by the smallest variant that carries the magnification.
+   It eases in rather than snapping, and its center is clamped so the
+   frame never leaves the photo. */
+
+const ZOOM = 2.6;
+const finePointer = window.matchMedia('(hover: hover) and (pointer: fine)');
+let lensEl = null;
+
+function lbZoomOff() {
+  if (lensEl) lensEl.classList.remove('on');
+}
+
+function zoomSource(p, displayedWidth) {
+  const target = displayedWidth * ZOOM * (window.devicePixelRatio || 1);
+  const s = sources(p);
+  return (s.find(([w]) => w >= target) || s[s.length - 1])[1];
+}
+
+function initLoupe() {
+  lensEl = document.createElement('div');
+  lensEl.className = 'lb-lens';
+  document.querySelector('.lb-mat').appendChild(lensEl);
+
+  lb.addEventListener('mousemove', (e) => {
+    if (!finePointer.matches || !lbState.open) return;
+    const img = lbPhotoEl();
+    if (!img) return;
+    const r = img.getBoundingClientRect();
+    if (e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom) {
+      lbZoomOff();
+      return;
+    }
+    const p = lbState.photos[lbState.index];
+    const mat = lensEl.parentElement.getBoundingClientRect();
+    // a 35mm frame: the lens is 3:2, like the negatives it reads
+    let lw = Math.min(252, r.width * 0.55);
+    let lh = lw / 1.5;
+    if (lh > r.height * 0.6) { lh = r.height * 0.6; lw = lh * 1.5; }
+    const hw = lw / 2;
+    const hh = lh / 2;
+    // the frame stays centered on the cursor; past the photo's border it
+    // simply shows the mat, like framing off the edge of a print
+    const zw = r.width * ZOOM;
+    const zh = r.height * ZOOM;
+    const cropX = ((e.clientX - r.left) / r.width) * zw;
+    const cropY = ((e.clientY - r.top) / r.height) * zh;
+    Object.assign(lensEl.style, {
+      left: `${e.clientX - mat.left - hw}px`,
+      top: `${e.clientY - mat.top - hh}px`,
+      width: `${Math.round(lw)}px`,
+      height: `${Math.round(lh)}px`,
+      backgroundImage: `url("${zoomSource(p, r.width)}")`,
+      backgroundSize: `${zw}px ${zh}px`,
+      backgroundPosition: `${hw - cropX}px ${hh - cropY}px`,
+    });
+    lensEl.classList.add('on');
+  });
+  lb.addEventListener('mouseleave', lbZoomOff);
+}
+
 function initLightbox() {
+  initLoupe();
   document.getElementById('lbClose').addEventListener('click', closeLightbox);
   document.getElementById('lbPrev').addEventListener('click', () => lbStep(-1));
   document.getElementById('lbNext').addEventListener('click', () => lbStep(1));
