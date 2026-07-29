@@ -19,6 +19,7 @@ AWS_SECRET_ACCESS_KEY="$(_cf_get r2_secret_access_key)"
 if [ -z "$CLOUDFLARE_API_TOKEN" ] || [ -z "$AWS_ACCESS_KEY_ID" ] || [ -z "$AWS_SECRET_ACCESS_KEY" ]; then
   echo "✗ One or more secrets missing from Keychain. Run: ./scripts/store-secrets.sh" >&2
   unset CLOUDFLARE_API_TOKEN AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY
+  # shellcheck disable=SC2317  # exit is reached when executed rather than sourced
   return 1 2>/dev/null || exit 1
 fi
 
