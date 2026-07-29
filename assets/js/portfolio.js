@@ -242,7 +242,10 @@ function renderHome() {
         <h1 class="visually-hidden">Justin Tahara — photographs on film</h1>
         <div class="covers">${cells.join('')}</div>
       </main>
-      <footer class="home-foot">© Justin Tahara — shot on film since 2019</footer>
+      <footer class="home-foot">
+        <svg class="foot-mark" viewBox="6 2 66 38" aria-hidden="true"><g transform="skewX(-7)" fill="currentColor"><polygon points="12,4 30,4 27,7 15,7"/><polygon points="31,5 31,20 28,17.5 28,8"/><polygon points="31,22 31,37 28,34 28,25"/><polygon points="30,38 12,38 15,35 27,35"/><polygon points="11,37 11,28 14,31 14,34"/><polygon points="42,4 68,4 65,7 45,7"/><polygon points="53,8 57,8 57,35 55,38 53,35"/></g></svg>
+        <div>© Justin Tahara — shot on film since 2019</div>
+      </footer>
     </div>`;
 
   document.title = 'Justin Tahara — photographs on film';

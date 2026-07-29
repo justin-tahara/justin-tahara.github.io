@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 42">
+  <!-- JT date-stamp wordmark: full three-layer quartz glow with unlit "88"
+       ghost segments, on the site's lightbox ground. Standalone asset for
+       avatars, social cards, and anywhere the mark is needed off-site. -->
+  <defs>
+    <g id="lit">
+      <g transform="skewX(-7)">
+        <polygon points="12,4 30,4 27,7 15,7"/>
+        <polygon points="31,5 31,20 28,17.5 28,8"/>
+        <polygon points="31,22 31,37 28,34 28,25"/>
+        <polygon points="30,38 12,38 15,35 27,35"/>
+        <polygon points="11,37 11,28 14,31 14,34"/>
+        <polygon points="42,4 68,4 65,7 45,7"/>
+        <polygon points="53,8 57,8 57,35 55,38 53,35"/>
+      </g>
+    </g>
+    <g id="ghost">
+      <g transform="skewX(-7)">
+        <polygon points="12,4 30,4 27,7 15,7"/>
+        <polygon points="31,5 31,20 28,17.5 28,8"/>
+        <polygon points="31,22 31,37 28,34 28,25"/>
+        <polygon points="30,38 12,38 15,35 27,35"/>
+        <polygon points="11,37 11,22 14,25 14,34"/>
+        <polygon points="11,20 11,5 14,8 14,17.5"/>
+        <polygon points="13,21 16,19.6 26,19.6 29,21 26,22.4 16,22.4"/>
+        <polygon points="46,4 64,4 61,7 49,7"/>
+        <polygon points="65,5 65,20 62,17.5 62,8"/>
+        <polygon points="65,22 65,37 62,34 62,25"/>
+        <polygon points="64,38 46,38 49,35 61,35"/>
+        <polygon points="45,37 45,22 48,25 48,34"/>
+        <polygon points="45,20 45,5 48,8 48,17.5"/>
+        <polygon points="47,21 50,19.6 60,19.6 63,21 60,22.4 50,22.4"/>
+      </g>
+    </g>
+    <filter id="wide" x="-60%" y="-60%" width="220%" height="220%">
+      <feGaussianBlur stdDeviation="2.6"/>
+    </filter>
+    <filter id="tight" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="0.9"/>
+    </filter>
+  </defs>
+  <rect width="80" height="42" fill="#191510"/>
+  <g transform="translate(-3,0)">
+    <use href="#ghost" fill="#f3ecdf" opacity="0.055"/>
+    <use href="#lit" fill="#ff6a00" filter="url(#wide)" opacity=".55"/>
+    <use href="#lit" fill="#ff9d3c" filter="url(#tight)" opacity=".95"/>
+    <use href="#lit" fill="#ffd9a8" opacity=".42"/>
+  </g>
+</svg>

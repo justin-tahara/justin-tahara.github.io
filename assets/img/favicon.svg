@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 44 44">
+  <!-- JT date-stamp mark: seven-segment letters, quartz-lamp glow, dark tile.
+       Letterforms are hand-drawn polygons (design_handoff: "the Date Stamp") -->
+  <defs>
+    <g id="jt">
+      <g transform="skewX(-7)">
+        <polygon points="12,4 30,4 27,7 15,7"/>
+        <polygon points="31,5 31,20 28,17.5 28,8"/>
+        <polygon points="31,22 31,37 28,34 28,25"/>
+        <polygon points="30,38 12,38 15,35 27,35"/>
+        <polygon points="11,37 11,28 14,31 14,34"/>
+        <polygon points="42,4 68,4 65,7 45,7"/>
+        <polygon points="53,8 57,8 57,35 55,38 53,35"/>
+      </g>
+    </g>
+    <filter id="bloom" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="0.9"/>
+    </filter>
+  </defs>
+  <rect width="44" height="44" rx="9" fill="#191510"/>
+  <use href="#jt" transform="translate(-1.4,9.4) scale(0.62)" fill="#ff6a00" filter="url(#bloom)" opacity=".6"/>
+  <use href="#jt" transform="translate(-1.4,9.4) scale(0.62)" fill="#ff9d3c"/>
+  <use href="#jt" transform="translate(-1.4,9.4) scale(0.62)" fill="#ffd9a8" opacity=".35"/>
+</svg>
