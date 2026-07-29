@@ -263,6 +263,14 @@ a.home-name-link { text-decoration: none; }
   color: var(--muted);
   margin-top: 44px;
 }
+/* the date-stamp signature: quiet burnt orange by day (glows only on dark) */
+.foot-mark {
+  width: 34px;
+  height: auto;
+  margin: 0 auto 8px;
+  display: block;
+  color: #b5541f;
+}
 
 /* ---------- humans grid caption (small line under the photo) ---------- */
 .shot-line {
