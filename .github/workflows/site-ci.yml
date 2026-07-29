@@ -9,6 +9,8 @@ on:
     paths:
       - "**/*.html"
       - "assets/**"
+      - "scripts/**"
+      - "infra/cloudflare/scripts/**"
       - ".github/workflows/site-ci.yml"
       - ".htmlvalidate.json"
       - "lighthouserc.json"
@@ -55,11 +57,21 @@ jobs:
     name: 404 fallback in sync
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
       # GitHub Pages serves 404.html for deep links (/city/…); the portfolio
       # relies on it being a byte-identical copy of index.html.
       - name: 404.html matches index.html
         run: diff index.html 404.html
+
+  shell:
+    name: shellcheck
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      # The publish pipeline (sync-photos.sh) deploys straight to prod with no
+      # other CI signal — shellcheck is the only gate it has.
+      - name: shellcheck
+        run: shellcheck scripts/*.sh infra/cloudflare/scripts/*.sh
 
   lighthouse:
     name: lighthouse
