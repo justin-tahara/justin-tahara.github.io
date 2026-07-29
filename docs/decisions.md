@@ -70,3 +70,16 @@ credential-free uptime/behavior check, weekly drift + link-rot sweeps — each
 alerting through a single self-closing GitHub issue rather than a pager. No
 metrics stack, no dashboards to feed. The absence of unnecessary machinery is
 a decision, not an omission.
+
+## 9. Deep links: an edge worker serves the shell, publishing stays no-build
+
+GitHub Pages answers every client-side route (/city/*, /about, /humans,
+/jasmine) with 404.html at a 404 status — correct bytes, unindexable pages,
+homepage-flavored link unfurls. Two fixes were on the table: a worker that
+returns the shell with a 200 for the known route set, or generating real
+per-route index.html files at publish time. The worker won: it keeps the
+frontend build-free and the origin boring (#1), and the same ~100 lines
+rewrite <title>/description/OG/canonical per route and generate sitemap.xml
+straight from the photo manifest — so publishing a roll still requires no
+site deploy. Costs accepted: one worker to operate (it fails open to the old
+behavior), and a terraform route list that mirrors SPECIAL_ROLLS.

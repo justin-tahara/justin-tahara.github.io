@@ -157,6 +157,29 @@ jobs:
           echo "access-control-allow-origin=${allow:-<none>}"
           [ "$allow" = "https://$HOST" ] || [ "$allow" = "*" ]
 
+      # The spa-shell worker (worker.tf) must answer known SPA routes with a
+      # 200 + per-route metadata, and unknown ones must still 404.
+      - name: SPA deep links return 200 with per-route metadata
+        run: |
+          fail=0
+          slug=$(python3 -c 'import json; m=json.load(open("/tmp/manifest.json")); print(sorted(set(m["rolls"]) - {"jasmine"})[0])')
+          for p in /about /humans "/city/$slug"; do
+            code=$(curl -sS -o /dev/null -w '%{http_code}' --max-time 30 "https://$HOST$p")
+            if [ "$code" = "200" ]; then echo "ok   $p -> 200"; else echo "FAIL $p -> $code"; fail=1; fi
+          done
+          curl -sS --max-time 30 "https://$HOST/about" | grep -q "<title>About — Justin Tahara</title>" \
+            || { echo "FAIL: /about title not rewritten"; fail=1; }
+          code=$(curl -sS -o /dev/null -w '%{http_code}' --max-time 30 "https://$HOST/city/not-a-roll")
+          [ "$code" = "404" ] || { echo "FAIL /city/not-a-roll -> $code (want 404)"; fail=1; }
+          exit $fail
+
+      - name: sitemap and robots are live
+        run: |
+          curl -sS --fail --max-time 30 "https://$HOST/sitemap.xml" | grep -q "<urlset" \
+            || { echo "FAIL: sitemap.xml missing or not XML"; exit 1; }
+          curl -sS --fail --max-time 30 "https://$HOST/robots.txt" | grep -q "Sitemap: https://$HOST/sitemap.xml" \
+            || { echo "FAIL: robots.txt missing the sitemap line"; exit 1; }
+
       # Same alerting pattern as terraform-drift: failures open/update a single
       # labeled issue, the next green run closes it. Without this, a red daily
       # run (this is the de-facto uptime check) notifies no one.
