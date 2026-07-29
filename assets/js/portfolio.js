@@ -363,7 +363,7 @@ function renderError() {
           <div class="tagline">photographs on film</div>
         </div>
       </header>
-      <p class="status-note">The photographs didn't load — please try again in a moment,
+      <p class="status-note">The photographs didn't load — <a href="">try again</a>,
       or <a href="${CONTACT.email}">write me</a> if it keeps happening.</p>
     </div>`;
 }
