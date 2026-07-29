@@ -116,6 +116,47 @@ jobs:
             *) echo "FAIL: no cf-cache-status header (not proxied, or cache rule missing)"; exit 1;;
           esac
 
+      # The photos host is the site's real single point of failure: if
+      # manifest.json 404s or serves bad JSON, every view renders the error
+      # state. Verify the whole contract, not just the apex.
+      - name: photos manifest is live, valid JSON, non-empty
+        run: |
+          curl -sS --fail --max-time 30 "https://images.$HOST/manifest.json" -o /tmp/manifest.json
+          python3 - <<'PY'
+          import json
+          m = json.load(open("/tmp/manifest.json"))
+          rolls = m["rolls"]
+          assert isinstance(rolls, dict) and rolls, "manifest has no rolls"
+          photos = sum(len(v) for v in rolls.values())
+          assert photos > 0, "manifest lists zero photos"
+          print(f"ok: {len(rolls)} rolls, {photos} photos")
+          PY
+
+      - name: manifest is not pinned at the edge
+        run: |
+          # The 5-minute TTL (edge.tf cache_photos_manifest) must hold in
+          # practice — the 30-day host rule pinning the manifest is how newly
+          # synced photos silently stop appearing.
+          age=$(curl -sSI --max-time 30 "https://images.$HOST/manifest.json" | tr -d '\r' | awk 'tolower($1)=="age:"{print $2}')
+          echo "age=${age:-<none>}"
+          [ -z "$age" ] || [ "$age" -le 600 ] || { echo "FAIL: manifest pinned at the edge (age ${age}s)"; exit 1; }
+
+      - name: photo variants serve immutable from the edge
+        run: |
+          url=$(python3 -c 'import json; m=json.load(open("/tmp/manifest.json")); roll=sorted(m["rolls"])[0]; p=m["rolls"][roll][0]; print(sorted(p["variants"].values())[0])')
+          echo "probe: $url"
+          headers=$(curl -sSI --fail --max-time 30 "$url" | tr -d '\r')
+          echo "$headers" | grep -qi "^cache-control:.*immutable" || { echo "FAIL: variant missing immutable cache-control"; exit 1; }
+          echo "$headers" | grep -qi "^cf-cache-status:" || { echo "FAIL: variant not proxied (no cf-cache-status)"; exit 1; }
+
+      - name: photos host answers CORS preflight from the apex
+        run: |
+          allow=$(curl -sS --max-time 30 -X OPTIONS "https://images.$HOST/manifest.json" \
+            -H "Origin: https://$HOST" -H "Access-Control-Request-Method: GET" \
+            -D - -o /dev/null | tr -d '\r' | awk 'tolower($1)=="access-control-allow-origin:"{print $2}')
+          echo "access-control-allow-origin=${allow:-<none>}"
+          [ "$allow" = "https://$HOST" ] || [ "$allow" = "*" ]
+
       # Same alerting pattern as terraform-drift: failures open/update a single
       # labeled issue, the next green run closes it. Without this, a red daily
       # run (this is the de-facto uptime check) notifies no one.
