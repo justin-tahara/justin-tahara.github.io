@@ -1,8 +1,13 @@
 name: terraform-plan
 
 # Runs fmt / validate / plan on PRs that touch the Cloudflare module and posts
-# the result as a PR comment. Plan only — never applies. Secrets are available
-# for same-repo PRs only (fork PRs run without creds and the plan step is skipped).
+# the result as a PR comment. Plan only — never applies.
+#
+# Two tiers, because only same-repo human PRs can reach the secrets:
+#   lint  — always runs. fmt, tflint, trivy, and init -backend=false + validate.
+#           No credentials, so it works on fork and Dependabot PRs.
+#   plan  — needs the R2 backend and the Cloudflare API, so it runs only where
+#           the Actions secrets resolve (see the job's own comment).
 
 on:
   pull_request:
@@ -19,16 +24,35 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  # Static analysis needs no credentials, so it runs on fork PRs too.
+  # Static analysis needs no credentials, so it runs on fork and Dependabot PRs
+  # too — which is the only signal a provider-bump PR gets.
   lint:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: infra/cloudflare
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd # v3
+        with:
+          terraform_version: 1.15.6
+
+      - name: fmt
+        run: terraform fmt -check -recursive
+
+      # -backend=false skips the R2 backend (the part that needs credentials)
+      # while still downloading providers, which is what validate needs. This is
+      # the real gate on a provider bump: it catches a version whose schema no
+      # longer matches the config.
+      - name: init (no backend) and validate
+        run: |
+          terraform init -backend=false -input=false
+          terraform validate -no-color
 
       - uses: terraform-linters/setup-tflint@6e1e0642c0289bd619021bf6b34e3c08ed1e005a # v6.3.0
 
       - name: tflint
-        working-directory: infra/cloudflare
         env:
           # avoids GitHub API rate limits when --init fetches plugins
           GITHUB_TOKEN: ${{ github.token }}
@@ -45,6 +69,18 @@ jobs:
           severity: MEDIUM,HIGH,CRITICAL
 
   plan:
+    # The R2 backend and the Cloudflare API need the Actions secrets, and those
+    # resolve to empty for anything but a same-repo human PR:
+    #   - fork PRs get no secrets at all
+    #   - Dependabot PRs read a SEPARATE Dependabot secrets store
+    # Without this guard the job fails at `init` with "No valid credential
+    # sources found" on every Dependabot bump. Withholding the credentials is
+    # also deliberate: init/plan execute the provider binary, so a PR whose
+    # whole purpose is changing which provider version runs must never hold the
+    # live Cloudflare token. `lint` still covers those PRs credential-free.
+    if: >-
+      github.event.pull_request.head.repo.full_name == github.repository
+      && github.actor != 'dependabot[bot]'
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -56,12 +92,8 @@ jobs:
         with:
           terraform_version: 1.15.6
 
-      - name: fmt
-        id: fmt
-        run: terraform fmt -check -recursive
-        continue-on-error: true
-
-      # Cloud credentials scoped to the terraform steps only, so the
+      # fmt and validate live in `lint`; this job is only the credentialed part.
+      # Credentials are scoped to the terraform steps themselves, so the
       # third-party setup-terraform step never sees them.
       - name: init
         id: init
@@ -70,14 +102,6 @@ jobs:
           AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
         run: terraform init -input=false
-
-      - name: validate
-        id: validate
-        env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
-        run: terraform validate -no-color
 
       - name: plan
         id: plan
@@ -102,10 +126,10 @@ jobs:
               "",
               "| step | result |",
               "| --- | --- |",
-              "| fmt | `${{ steps.fmt.outcome }}` |",
               "| init | `${{ steps.init.outcome }}` |",
-              "| validate | `${{ steps.validate.outcome }}` |",
               "| plan | `${{ steps.plan.outcome }}` |",
+              "",
+              "fmt / validate / tflint / trivy report separately in the `lint` check.",
               "",
               "<details><summary>Show plan</summary>",
               "",
