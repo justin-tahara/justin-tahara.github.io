@@ -19,6 +19,31 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # Static analysis needs no credentials, so it runs on fork PRs too.
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - uses: terraform-linters/setup-tflint@6e1e0642c0289bd619021bf6b34e3c08ed1e005a # v6.3.0
+
+      - name: tflint
+        working-directory: infra/cloudflare
+        env:
+          # avoids GitHub API rate limits when --init fetches plugins
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          tflint --init
+          tflint --format compact
+
+      - name: trivy misconfiguration scan # tfsec's successor
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          scan-type: config
+          scan-ref: infra/cloudflare
+          exit-code: "1"
+          severity: MEDIUM,HIGH,CRITICAL
+
   plan:
     runs-on: ubuntu-latest
     defaults:
