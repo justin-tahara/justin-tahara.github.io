@@ -6,9 +6,9 @@
 :root {
   --paper:      #f4f1ec;   /* page ground */
   --ink:        #201f1d;   /* primary text */
-  --muted:      #7a746a;   /* italic captions / secondary */
-  --faint:      #a89f90;   /* tertiary */
-  --gold:       #b68235;   /* accent (stroke + small marks only) */
+  --muted:      #726c62;   /* italic captions / secondary (>=4.5:1 on paper) */
+  --faint:      #a89f90;   /* tertiary — decorative marks only, not text */
+  --gold:       #b17e30;   /* accent (stroke + small marks only, >=3:1 on paper) */
   --gold-deep:  #8a6516;   /* accent text on paper (>=3:1) */
   --hair:       rgba(32, 31, 29, .16);
   --hair-soft:  rgba(32, 31, 29, .14);
@@ -260,7 +260,7 @@ a.home-name-link { text-decoration: none; }
   font-family: var(--font-body);
   font-style: italic;
   font-size: 12.5px;
-  color: var(--faint);
+  color: var(--muted);
   margin-top: 44px;
 }
 
@@ -293,6 +293,8 @@ a.home-name-link { text-decoration: none; }
   font-size: 15.5px;
   line-height: 1.85;
   text-align: justify;
+  -webkit-hyphens: auto;
+  hyphens: auto;
   margin: 0 0 18px;
 }
 .about-col .rule { margin: 26px 0 22px; clear: both; }
@@ -326,6 +328,8 @@ a.home-name-link { text-decoration: none; }
 }
 @media (max-width: 700px) {
   .about-portrait { float: none; width: 100%; max-width: 320px; margin: 0 0 20px; }
+  /* the measure is too narrow to justify cleanly on a phone */
+  .about-col p { text-align: left; }
 }
 
 /* ---------- status (loading / error) ---------- */
