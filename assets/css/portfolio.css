@@ -12,14 +12,52 @@
   --gold-deep:  #8a6516;   /* accent text on paper (>=3:1) */
   --hair:       rgba(32, 31, 29, .16);
   --hair-soft:  rgba(32, 31, 29, .14);
+  --plate:      rgba(32, 31, 29, .05);   /* quiet ground behind loading scans */
+  --mat-paper:  #fdfcf9;                 /* the tipped-in plate's paper mat */
+  --lift:       rgba(32, 31, 29, .18);   /* hover shadow */
+  --stamp:      #b5541f;                 /* date-stamp mark, unlit by day */
   --font-head:  'Cormorant Garamond', Georgia, serif;
   --font-body:  'Lora', Georgia, serif;
-  /* lightbox */
+  /* lightbox (its own room — same in both themes) */
   --lb-bg:      #191510;
   --lb-mat:     #0f0c08;
   --lb-gold-1:  #d8b072;
   --lb-gold-2:  #e1ad66;
   --lb-text:    #f3ecdf;
+}
+
+/* ---------- night (ISO 3200): the whole site moves into the lightbox's room.
+   Two blocks carry the same values: the media query lights system-dark visitors
+   before JS runs; the attribute is the visitor's explicit dial setting. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper:     #191510;
+    --ink:       #f3ecdf;
+    --muted:     #a59780;
+    --faint:     #6b6153;
+    --gold:      #d8b072;
+    --gold-deep: #e1ad66;
+    --hair:      rgba(243, 236, 223, .17);
+    --hair-soft: rgba(243, 236, 223, .14);
+    --plate:     rgba(243, 236, 223, .06);
+    --mat-paper: #0f0c08;
+    --lift:      rgba(0, 0, 0, .55);
+    --stamp:     #ff9d3c;
+  }
+}
+:root[data-theme="dark"] {
+  --paper:     #191510;
+  --ink:       #f3ecdf;
+  --muted:     #a59780;
+  --faint:     #6b6153;
+  --gold:      #d8b072;
+  --gold-deep: #e1ad66;
+  --hair:      rgba(243, 236, 223, .17);
+  --hair-soft: rgba(243, 236, 223, .14);
+  --plate:     rgba(243, 236, 223, .06);
+  --mat-paper: #0f0c08;
+  --lift:      rgba(0, 0, 0, .55);
+  --stamp:     #ff9d3c;
 }
 
 * { box-sizing: border-box; }
@@ -167,12 +205,12 @@ a.wordmark-link { text-decoration: none; }
   width: 100%;
   height: auto;
   outline: 1px solid var(--hair);
-  background: rgba(32, 31, 29, .05); /* quiet plate while the scan loads */
+  background: var(--plate); /* quiet plate while the scan loads */
   opacity: 0;
   transition: opacity .5s ease, box-shadow .3s ease;
 }
 /* shadow lifts the photo only — never the caption line below it */
-.shot:hover img { box-shadow: 0 10px 26px rgba(32, 31, 29, .18); }
+.shot:hover img { box-shadow: 0 10px 26px var(--lift); }
 .shot img.is-loaded { opacity: 1; }
 
 /* scroll-reveal: tiles fade + rise as they enter the viewport */
@@ -228,7 +266,7 @@ a.home-name-link { text-decoration: none; }
   aspect-ratio: 3 / 2;
   overflow: hidden;
   outline: 1px solid var(--hair-soft);
-  background: rgba(32, 31, 29, .05);
+  background: var(--plate);
 }
 .cover-img img {
   width: 100%;
@@ -263,14 +301,58 @@ a.home-name-link { text-decoration: none; }
   color: var(--muted);
   margin-top: 44px;
 }
-/* the date-stamp signature: quiet burnt orange by day (glows only on dark) */
+/* the date-stamp signature: quiet burnt orange by day, lit at night */
 .foot-mark {
   width: 34px;
   height: auto;
   margin: 0 auto 8px;
   display: block;
-  color: #b5541f;
+  color: var(--stamp);
 }
+:root[data-theme="dark"] .foot-mark { filter: drop-shadow(0 0 5px rgba(255, 106, 0, .55)); }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .foot-mark { filter: drop-shadow(0 0 5px rgba(255, 106, 0, .55)); }
+}
+
+/* ---------- the film-speed dial (theme toggle): ISO 100 by day, 3200 at night.
+   The digits are the date-stamp's seven-segment lamp. */
+.iso-toggle {
+  border: 0;
+  background: none;
+  padding: 2px 0;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-family: var(--font-head);
+  font-size: 12px;
+  letter-spacing: .18em;
+  color: var(--muted);
+}
+.iso-toggle svg { height: 13px; width: auto; display: block; color: var(--stamp); }
+.iso-toggle:hover { color: var(--gold-deep); }
+:root[data-theme="dark"] .iso-toggle svg { filter: drop-shadow(0 0 4px rgba(255, 106, 0, .6)); }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .iso-toggle svg { filter: drop-shadow(0 0 4px rgba(255, 106, 0, .6)); }
+}
+.colophon .iso-toggle { margin-bottom: 14px; }
+.menu-overlay .iso-toggle { margin-top: 26px; font-size: 14px; }
+.menu-overlay .iso-toggle svg { height: 16px; }
+.home-menu .iso-toggle { font-size: 12px; vertical-align: 1px; }
+
+/* ---------- lightbox loupe: hover pans a close reading of the scan */
+.lb-mat { position: relative; }
+@media (hover: hover) and (pointer: fine) {
+  .lb-mat img { cursor: zoom-in; }
+}
+.lb-zoom {
+  position: absolute;
+  display: none;
+  background-repeat: no-repeat;
+  outline: 1px solid rgba(182, 130, 53, .4);
+  pointer-events: none;
+}
+.lb-zoom.on { display: block; }
 
 /* ---------- humans grid caption (small line under the photo) ---------- */
 .shot-line {
@@ -323,7 +405,7 @@ a.home-name-link { text-decoration: none; }
   width: 100%;
   height: auto;
   padding: 8px;
-  background: #fdfcf9;
+  background: var(--mat-paper);
   outline: 1px solid var(--hair);
 }
 .about-portrait figcaption {
