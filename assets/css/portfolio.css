@@ -347,6 +347,7 @@ a.home-name-link { text-decoration: none; }
 }
 .lb-lens {
   position: absolute;
+  background-color: var(--lb-mat); /* past the photo's edge, the frame reads mat */
   background-repeat: no-repeat;
   border: 1px solid rgba(216, 176, 114, .35);
   box-shadow: 0 10px 34px rgba(0, 0, 0, .55);

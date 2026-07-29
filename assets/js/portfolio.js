@@ -619,17 +619,15 @@ function initLoupe() {
     if (lh > r.height * 0.6) { lh = r.height * 0.6; lw = lh * 1.5; }
     const hw = lw / 2;
     const hh = lh / 2;
-    // the box parks at the photo's edge; the crop keeps following the cursor
-    // all the way to the true edge pixels
-    const bx = Math.min(Math.max(e.clientX, r.left + hw), r.right - hw);
-    const by = Math.min(Math.max(e.clientY, r.top + hh), r.bottom - hh);
+    // the frame stays centered on the cursor; past the photo's border it
+    // simply shows the mat, like framing off the edge of a print
     const zw = r.width * ZOOM;
     const zh = r.height * ZOOM;
-    const cropX = Math.min(Math.max(((e.clientX - r.left) / r.width) * zw, hw), zw - hw);
-    const cropY = Math.min(Math.max(((e.clientY - r.top) / r.height) * zh, hh), zh - hh);
+    const cropX = ((e.clientX - r.left) / r.width) * zw;
+    const cropY = ((e.clientY - r.top) / r.height) * zh;
     Object.assign(lensEl.style, {
-      left: `${bx - mat.left - hw}px`,
-      top: `${by - mat.top - hh}px`,
+      left: `${e.clientX - mat.left - hw}px`,
+      top: `${e.clientY - mat.top - hh}px`,
       width: `${Math.round(lw)}px`,
       height: `${Math.round(lh)}px`,
       backgroundImage: `url("${zoomSource(p, r.width)}")`,
