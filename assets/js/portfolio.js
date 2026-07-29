@@ -577,16 +577,18 @@ function lbStep(delta) {
   lbRender();
 }
 
-/* ---------- loupe: hover pans a close reading of the scan ----------
-   eBay-style: the cursor picks the region, the overlay shows it at ZOOM x,
-   fed by the smallest variant that can carry the magnification. */
+/* ---------- loupe: a viewfinder lens rides with the cursor ----------
+   A framed box floats over the photo showing the region under the cursor
+   at ZOOM x, fed by the smallest variant that carries the magnification.
+   It eases in rather than snapping, and its center is clamped so the
+   frame never leaves the photo. */
 
 const ZOOM = 2.6;
 const finePointer = window.matchMedia('(hover: hover) and (pointer: fine)');
-let zoomEl = null;
+let lensEl = null;
 
 function lbZoomOff() {
-  if (zoomEl) zoomEl.classList.remove('on');
+  if (lensEl) lensEl.classList.remove('on');
 }
 
 function zoomSource(p, displayedWidth) {
@@ -596,9 +598,9 @@ function zoomSource(p, displayedWidth) {
 }
 
 function initLoupe() {
-  zoomEl = document.createElement('div');
-  zoomEl.className = 'lb-zoom';
-  document.querySelector('.lb-mat').appendChild(zoomEl);
+  lensEl = document.createElement('div');
+  lensEl.className = 'lb-lens';
+  document.querySelector('.lb-mat').appendChild(lensEl);
 
   lb.addEventListener('mousemove', (e) => {
     if (!finePointer.matches || !lbState.open) return;
@@ -610,17 +612,23 @@ function initLoupe() {
       return;
     }
     const p = lbState.photos[lbState.index];
-    const mat = zoomEl.parentElement.getBoundingClientRect();
-    Object.assign(zoomEl.style, {
-      left: `${r.left - mat.left}px`,
-      top: `${r.top - mat.top}px`,
-      width: `${r.width}px`,
-      height: `${r.height}px`,
+    const mat = lensEl.parentElement.getBoundingClientRect();
+    const size = Math.round(Math.min(210, r.width * 0.5, r.height * 0.6));
+    const half = size / 2;
+    const cx = Math.min(Math.max(e.clientX, r.left + half), r.right - half);
+    const cy = Math.min(Math.max(e.clientY, r.top + half), r.bottom - half);
+    const fx = (cx - r.left) / r.width;
+    const fy = (cy - r.top) / r.height;
+    Object.assign(lensEl.style, {
+      left: `${cx - mat.left - half}px`,
+      top: `${cy - mat.top - half}px`,
+      width: `${size}px`,
+      height: `${size}px`,
       backgroundImage: `url("${zoomSource(p, r.width)}")`,
       backgroundSize: `${r.width * ZOOM}px ${r.height * ZOOM}px`,
-      backgroundPosition: `${((e.clientX - r.left) / r.width) * 100}% ${((e.clientY - r.top) / r.height) * 100}%`,
+      backgroundPosition: `${half - fx * r.width * ZOOM}px ${half - fy * r.height * ZOOM}px`,
     });
-    zoomEl.classList.add('on');
+    lensEl.classList.add('on');
   });
   lb.addEventListener('mouseleave', lbZoomOff);
 }

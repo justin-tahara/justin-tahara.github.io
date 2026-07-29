@@ -340,19 +340,41 @@ a.home-name-link { text-decoration: none; }
 .menu-overlay .iso-toggle svg { height: 16px; }
 .home-menu .iso-toggle { font-size: 12px; vertical-align: 1px; }
 
-/* ---------- lightbox loupe: hover pans a close reading of the scan */
+/* ---------- lightbox loupe: a viewfinder lens rides with the cursor */
 .lb-mat { position: relative; }
 @media (hover: hover) and (pointer: fine) {
-  .lb-mat img { cursor: zoom-in; }
+  .lb-mat img { cursor: crosshair; }
 }
-.lb-zoom {
+.lb-lens {
   position: absolute;
-  display: none;
   background-repeat: no-repeat;
-  outline: 1px solid rgba(182, 130, 53, .4);
+  border: 1px solid rgba(216, 176, 114, .35);
+  box-shadow: 0 10px 34px rgba(0, 0, 0, .55);
   pointer-events: none;
+  opacity: 0;
+  transform: scale(.9);
+  transition: opacity .24s ease, transform .24s cubic-bezier(.2, .7, .2, 1);
 }
-.lb-zoom.on { display: block; }
+/* viewfinder framelines: four gold corner brackets */
+.lb-lens::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(#d8b072, #d8b072) 0 0 / 14px 2px,
+    linear-gradient(#d8b072, #d8b072) 0 0 / 2px 14px,
+    linear-gradient(#d8b072, #d8b072) 100% 0 / 14px 2px,
+    linear-gradient(#d8b072, #d8b072) 100% 0 / 2px 14px,
+    linear-gradient(#d8b072, #d8b072) 0 100% / 14px 2px,
+    linear-gradient(#d8b072, #d8b072) 0 100% / 2px 14px,
+    linear-gradient(#d8b072, #d8b072) 100% 100% / 14px 2px,
+    linear-gradient(#d8b072, #d8b072) 100% 100% / 2px 14px;
+  background-repeat: no-repeat;
+}
+.lb-lens.on { opacity: 1; transform: none; }
+@media (prefers-reduced-motion: reduce) {
+  .lb-lens { transition: none; transform: none; }
+}
 
 /* ---------- humans grid caption (small line under the photo) ---------- */
 .shot-line {
