@@ -27,7 +27,7 @@ jobs:
     env:
       HOST: justintahara.com
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: site is up (HTTPS, 200, real content)
         run: |
@@ -185,7 +185,7 @@ jobs:
       # run (this is the de-facto uptime check) notifies no one.
       - name: open/update or close the edge-verify issue
         if: always()
-        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         env:
           JOB_STATUS: ${{ job.status }}
         with:
