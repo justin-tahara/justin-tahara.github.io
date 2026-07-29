@@ -613,20 +613,28 @@ function initLoupe() {
     }
     const p = lbState.photos[lbState.index];
     const mat = lensEl.parentElement.getBoundingClientRect();
-    const size = Math.round(Math.min(210, r.width * 0.5, r.height * 0.6));
-    const half = size / 2;
-    const cx = Math.min(Math.max(e.clientX, r.left + half), r.right - half);
-    const cy = Math.min(Math.max(e.clientY, r.top + half), r.bottom - half);
-    const fx = (cx - r.left) / r.width;
-    const fy = (cy - r.top) / r.height;
+    // a 35mm frame: the lens is 3:2, like the negatives it reads
+    let lw = Math.min(252, r.width * 0.55);
+    let lh = lw / 1.5;
+    if (lh > r.height * 0.6) { lh = r.height * 0.6; lw = lh * 1.5; }
+    const hw = lw / 2;
+    const hh = lh / 2;
+    // the box parks at the photo's edge; the crop keeps following the cursor
+    // all the way to the true edge pixels
+    const bx = Math.min(Math.max(e.clientX, r.left + hw), r.right - hw);
+    const by = Math.min(Math.max(e.clientY, r.top + hh), r.bottom - hh);
+    const zw = r.width * ZOOM;
+    const zh = r.height * ZOOM;
+    const cropX = Math.min(Math.max(((e.clientX - r.left) / r.width) * zw, hw), zw - hw);
+    const cropY = Math.min(Math.max(((e.clientY - r.top) / r.height) * zh, hh), zh - hh);
     Object.assign(lensEl.style, {
-      left: `${cx - mat.left - half}px`,
-      top: `${cy - mat.top - half}px`,
-      width: `${size}px`,
-      height: `${size}px`,
+      left: `${bx - mat.left - hw}px`,
+      top: `${by - mat.top - hh}px`,
+      width: `${Math.round(lw)}px`,
+      height: `${Math.round(lh)}px`,
       backgroundImage: `url("${zoomSource(p, r.width)}")`,
-      backgroundSize: `${r.width * ZOOM}px ${r.height * ZOOM}px`,
-      backgroundPosition: `${half - fx * r.width * ZOOM}px ${half - fy * r.height * ZOOM}px`,
+      backgroundSize: `${zw}px ${zh}px`,
+      backgroundPosition: `${hw - cropX}px ${hh - cropY}px`,
     });
     lensEl.classList.add('on');
   });
