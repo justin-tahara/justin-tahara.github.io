@@ -17,6 +17,7 @@ on:
 
 permissions:
   contents: read
+  issues: write
 
 jobs:
   verify:
@@ -106,7 +107,7 @@ jobs:
 
       - name: static assets are edge-cached
         run: |
-          url="https://$HOST/assets/css/styles.css"
+          url="https://$HOST/assets/css/portfolio.css"
           curl -sS -o /dev/null "$url"   # warm the cache
           status=$(curl -sSI --max-time 30 "$url" | tr -d '\r' | awk 'tolower($1)=="cf-cache-status:"{print $2}')
           echo "cf-cache-status=$status"
@@ -114,3 +115,48 @@ jobs:
             HIT|MISS|EXPIRED|REVALIDATED) ;;                       # proxied + cache rule active
             *) echo "FAIL: no cf-cache-status header (not proxied, or cache rule missing)"; exit 1;;
           esac
+
+      # Same alerting pattern as terraform-drift: failures open/update a single
+      # labeled issue, the next green run closes it. Without this, a red daily
+      # run (this is the de-facto uptime check) notifies no one.
+      - name: open/update or close the edge-verify issue
+        if: always()
+        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7
+        env:
+          JOB_STATUS: ${{ job.status }}
+        with:
+          script: |
+            const failed = process.env.JOB_STATUS === "failure";
+            const title = "edge-verify failing: live edge does not match infra/cloudflare/";
+            const { data: open } = await github.rest.issues.listForRepo({
+              ...context.repo, state: "open", labels: "edge-verify",
+            });
+            const existing = open.find((i) => i.title === title);
+            const run = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+
+            if (!failed) {
+              if (existing) {
+                await github.rest.issues.createComment({
+                  ...context.repo, issue_number: existing.number,
+                  body: "Latest [edge-verify run](" + run + ") is green. Closing.",
+                });
+                await github.rest.issues.update({
+                  ...context.repo, issue_number: existing.number, state: "closed",
+                });
+              }
+              return;
+            }
+
+            const body = [
+              "The [edge-verify run](" + run + ") failed — the site is down or the live edge no longer matches `infra/cloudflare/`.",
+              "",
+              "Check the run log for which assertion failed (uptime, redirects, security headers, TLS floor, or edge cache).",
+            ].join("\n");
+
+            if (existing) {
+              await github.rest.issues.update({ ...context.repo, issue_number: existing.number, body });
+            } else {
+              await github.rest.issues.create({
+                ...context.repo, title, body, labels: ["edge-verify"],
+              });
+            }

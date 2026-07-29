@@ -1,0 +1,15 @@
+# Keeps the SHA-pinned GitHub Actions and the Terraform providers current.
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      actions:
+        patterns: ["*"]
+
+  - package-ecosystem: terraform
+    directory: /infra/cloudflare
+    schedule:
+      interval: weekly
